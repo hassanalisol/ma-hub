@@ -1225,8 +1225,8 @@ ${textContent.substring(0, 15000)}`;
       document.getElementById('generated-docs-list').innerHTML = generatedDocs.map((doc, i) => `
       <div class="generated-doc">
         <div class="generated-doc-info">
-          <div class="generated-doc-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <div class="generated-doc-icon" style="background:rgba(74,155,110,0.12)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;color:#4A9B6E"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
           </div>
           <div>
             <div class="generated-doc-name">${doc.name} — ${doc.soleDir ? 'Sole Director' : 'Board Meeting'}</div>
@@ -1235,7 +1235,7 @@ ${textContent.substring(0, 15000)}`;
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-secondary btn-sm" onclick="previewDoc(${i})">Preview</button>
-          <button class="btn btn-primary btn-sm" onclick="downloadDoc(${i})">Download</button>
+          <button class="btn btn-primary btn-sm" onclick="downloadDoc(${i})">Download .docx</button>
         </div>
       </div>`).join('');
 
@@ -1439,22 +1439,201 @@ function previewDoc(index) {
       <pre style="font-family:var(--font-sans);font-size:13px;color:var(--text2);white-space:pre-wrap;line-height:1.7;max-height:60vh;overflow-y:auto">${doc.content}</pre>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-primary" onclick="downloadDoc(${index})">Download as .txt</button>
+      <button class="btn btn-primary" onclick="downloadDoc(${index})">Download .docx</button>
       <button class="btn btn-secondary" onclick="closeModal()">Close</button>
     </div>`, 'modal-lg');
 }
 
-function downloadDoc(index) {
+// ── DOCX LIBRARY LOADER ──
+function loadDocxLib() {
+  return new Promise((resolve, reject) => {
+    if (window.docx) { resolve(window.docx); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.min.js';
+    s.onload = () => { if (window.docx) resolve(window.docx); else reject(new Error('docx not found on window')); };
+    s.onerror = () => reject(new Error('Failed to load docx library'));
+    document.head.appendChild(s);
+  });
+}
+
+// ── DOCX BUILDER ──
+// Converts Claude's plain-text board resolution into a properly formatted .docx
+async function buildBoardResDocx(docSpec) {
+  const lib = await loadDocxLib();
+  const { Document, Packer, Paragraph, TextRun, AlignmentType,
+          HeadingLevel, LevelFormat, BorderStyle, WidthType,
+          Table, TableRow, TableCell, ShadingType } = lib;
+
+  const lines = docSpec.content.split('\n');
+
+  // ── numbering config (bullets + numbered resolutions) ──
+  const numberingConfig = {
+    config: [
+      {
+        reference: 'bullets',
+        levels: [{ level: 0, format: LevelFormat.BULLET, text: '\u2022',
+          alignment: AlignmentType.LEFT,
+          style: { paragraph: { indent: { left: 720, hanging: 360 } } } }]
+      },
+      {
+        reference: 'resolutions',
+        levels: [{ level: 0, format: LevelFormat.DECIMAL, text: '%1.',
+          alignment: AlignmentType.LEFT,
+          style: { paragraph: { indent: { left: 720, hanging: 360 } } } }]
+      }
+    ]
+  };
+
+  // ── helpers ──
+  const blankLine = () => new Paragraph({ children: [new TextRun('')], spacing: { after: 0 } });
+
+  // Detect line types
+  function classifyLine(line) {
+    const t = line.trim();
+    if (!t) return 'blank';
+    // Numbered resolution items: "1. ", "2. " etc
+    if (/^\d+\.\s/.test(t)) return 'numbered';
+    // Bullet items starting with - or •
+    if (/^[-•]\s/.test(t)) return 'bullet';
+    // ALL CAPS section headings (at least 3 words or >= 6 chars all caps, not a company number line)
+    if (t === t.toUpperCase() && t.length > 5 && !/^Company number:/i.test(t) && /[A-Z]{3}/.test(t)) return 'heading';
+    // Company/date header line (short, contains "Company number" or "Date:")
+    if (/Company number:|^Date:/i.test(t)) return 'meta';
+    // Signature line
+    if (/^(Signed|Signature|Director|Chair|Dated)[:.\s]/i.test(t) || /_{4,}/.test(t)) return 'signature';
+    return 'body';
+  }
+
+  function makeParagraph(line, type) {
+    const t = line.trim();
+    switch (type) {
+      case 'blank':
+        return blankLine();
+
+      case 'heading':
+        return new Paragraph({
+          children: [new TextRun({ text: t, bold: true, size: 24, font: 'Arial' })],
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 240, after: 120 },
+          border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: 'C9A84C', space: 4 } }
+        });
+
+      case 'numbered': {
+        // Strip the leading "N. " so docx handles numbering
+        const text = t.replace(/^\d+\.\s*/, '');
+        return new Paragraph({
+          numbering: { reference: 'resolutions', level: 0 },
+          children: [new TextRun({ text, font: 'Arial', size: 22 })],
+          spacing: { after: 80 }
+        });
+      }
+
+      case 'bullet': {
+        const text = t.replace(/^[-•]\s*/, '');
+        return new Paragraph({
+          numbering: { reference: 'bullets', level: 0 },
+          children: [new TextRun({ text, font: 'Arial', size: 22 })],
+          spacing: { after: 60 }
+        });
+      }
+
+      case 'meta':
+        return new Paragraph({
+          children: [new TextRun({ text: t, font: 'Arial Narrow', size: 20, color: '555555' })],
+          spacing: { after: 60 }
+        });
+
+      case 'signature':
+        return new Paragraph({
+          children: [new TextRun({ text: t, font: 'Arial', size: 22, italics: true })],
+          spacing: { before: 120, after: 60 }
+        });
+
+      default: // body
+        return new Paragraph({
+          children: [new TextRun({ text: t, font: 'Arial', size: 22 })],
+          spacing: { after: 100 }
+        });
+    }
+  }
+
+  // ── Title block ──
+  const titlePara = new Paragraph({
+    children: [new TextRun({
+      text: docSpec.name + (docSpec.soleDir ? ' — Written Resolution of Sole Director' : ' — Board Meeting Minutes'),
+      bold: true, size: 28, font: 'Arial', color: '1A1A1A'
+    })],
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 0, after: 240 }
+  });
+
+  const subtitlePara = new Paragraph({
+    children: [new TextRun({
+      text: `Generated: ${docSpec.generated}`,
+      size: 18, font: 'Arial', color: '888888', italics: true
+    })],
+    alignment: AlignmentType.CENTER,
+    spacing: { after: 480 }
+  });
+
+  // ── Parse all lines ──
+  const children = [titlePara, subtitlePara];
+  for (const line of lines) {
+    const type = classifyLine(line);
+    children.push(makeParagraph(line, type));
+  }
+
+  const document = new Document({
+    numbering: numberingConfig,
+    styles: {
+      default: {
+        document: { run: { font: 'Arial', size: 22 } }
+      },
+      paragraphStyles: [
+        {
+          id: 'Heading2', name: 'Heading 2', basedOn: 'Normal', next: 'Normal', quickFormat: true,
+          run: { size: 24, bold: true, font: 'Arial', color: '1A1A1A' },
+          paragraph: { spacing: { before: 240, after: 120 }, outlineLevel: 1 }
+        }
+      ]
+    },
+    sections: [{
+      properties: {
+        page: {
+          size: { width: 11906, height: 16838 }, // A4
+          margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 }
+        }
+      },
+      children
+    }]
+  });
+
+  return Packer.toBlob(document);
+}
+
+async function downloadDoc(index) {
   const doc = window._generatedDocs?.[index];
   if (!doc) return;
-  const blob = new Blob([doc.content], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${doc.name.replace(/\s+/g, '_')}_${doc.soleDir ? 'Sole_Dir' : 'Board_Meeting'}.txt`;
-  a.click();
-  URL.revokeObjectURL(url);
-  showNotif(`${doc.name} downloaded`, 'success');
+
+  // Find and disable the button
+  const btns = document.querySelectorAll(`[onclick="downloadDoc(${index})"]`);
+  btns.forEach(b => { b.disabled = true; b.textContent = 'Building…'; });
+
+  try {
+    const blob = await buildBoardResDocx(doc);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${doc.name.replace(/\s+/g, '_')}_${doc.soleDir ? 'Sole_Dir' : 'Board'}.docx`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    showNotif(`${doc.name} downloaded as .docx`, 'success');
+  } catch(err) {
+    showNotif('Download failed: ' + err.message, 'error');
+    console.error('docx build error:', err);
+  } finally {
+    btns.forEach(b => { b.disabled = false; b.textContent = 'Download .docx'; });
+  }
 }
 
 // ── FILE UTILITIES ──
