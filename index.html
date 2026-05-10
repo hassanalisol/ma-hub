@@ -562,7 +562,8 @@ function renderDealDetail(deal) {
     <button class="btn btn-secondary btn-sm" onclick="openEditDeal(currentDeal)">Edit Deal</button>
     <button class="btn btn-danger btn-sm" onclick="archiveDeal('${d.id}')">Archive</button>`;
 
-  const tabs = ['Overview','Parties','Checklist','Documents','Signatures','AI & Documents','Critical Dates','Activity'];
+  const tabs = ['Overview','Parties','Checklist','Documents','Signatures','AI','Critical Dates','Activity'];
+  const tabLabels = {'Overview':'Overview','Parties':'Parties','Checklist':'Checklist','Documents':'Documents','Signatures':'Signatures','AI':'AI & Documents','Critical Dates':'Critical Dates','Activity':'Activity'};
   document.getElementById('content').innerHTML = `
   <div class="deal-detail-header">
     <div class="deal-detail-name">${d.deal_name}</div>
@@ -574,7 +575,7 @@ function renderDealDetail(deal) {
     </div>
   </div>
   <div class="tabs" id="deal-tabs">
-    ${tabs.map((t,i) => `<div class="tab${t==='Overview'?' active':''}" onclick="switchDealTab('${t}',this)">${t}</div>`).join('')}
+    ${tabs.map(t => `<div class="tab${t==='Overview'?' active':''}" onclick="switchDealTab('${t}',this)">${tabLabels[t]||t}</div>`).join('')}
   </div>
   <div id="deal-tab-content"></div>`;
 
@@ -586,7 +587,7 @@ async function switchDealTab(tab, el) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   if (el) el.classList.add('active');
   else {
-    document.querySelectorAll('.tab').forEach(t => { if (t.textContent === tab) t.classList.add('active'); });
+    document.querySelectorAll('.tab').forEach(t => { if (t.textContent.trim() === (tabLabels&&tabLabels[tab]||tab)) t.classList.add('active'); });
   }
 
   const c = document.getElementById('deal-tab-content');
@@ -698,7 +699,7 @@ async function switchDealTab(tab, el) {
     </div>`;
   }
 
-  else if (tab === 'AI & Documents') {
+  else if (tab === 'AI') {
     renderAITab();
   }
 
