@@ -605,6 +605,8 @@ async function switchDealTab(tab, el) {
         ${fieldRow('Client Role', d.client_role)}
         ${fieldRow('Counterparty', d.counterparty)}
         ${fieldRow('Counterparty Solicitors', d.counterparty_solicitors)}
+        ${fieldRow('Exclusivity Period', d.exclusivity_period ? d.exclusivity_period + ' months' : null)}
+        ${fieldRow('NDA in Place', d.nda_in_place)}
       </div>
       <div class="card">
         <div style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:1rem">Financial & Timeline</div>
@@ -1691,6 +1693,12 @@ function openNewDeal() {
       <div class="form-group"><label class="form-label">Counterparty Solicitors</label><input class="form-input" id="f-countersol" placeholder="Firm name"></div>
     </div>
     <div class="form-row">
+      <div class="form-group"><label class="form-label">Exclusivity Period (months)</label><input class="form-input" id="f-exclusivity" type="number" placeholder="3"></div>
+      <div class="form-group"><label class="form-label">NDA in Place</label>
+        <select class="form-select" id="f-nda"><option value="">—</option><option>Yes</option><option>No</option></select>
+      </div>
+    </div>
+    <div class="form-row">
       <div class="form-group"><label class="form-label">Deal Value (£)</label><input class="form-input" id="f-value" type="number" placeholder="500000"></div>
       <div class="form-group"><label class="form-label">Target Completion</label><input class="form-input" id="f-completion" type="date"></div>
     </div>
@@ -1724,6 +1732,8 @@ async function submitNewDeal() {
     counterparty_solicitors: document.getElementById('f-countersol').value,
     deal_value: document.getElementById('f-value').value || null,
     target_completion: document.getElementById('f-completion').value || null,
+    exclusivity_period: document.getElementById('f-exclusivity') ? document.getElementById('f-exclusivity').value || null : null,
+    nda_in_place: document.getElementById('f-nda') ? document.getElementById('f-nda').value || null : null,
     stage: document.getElementById('f-stage').value,
     rag_status: document.getElementById('f-rag').value,
     next_action: document.getElementById('f-action').value,
@@ -1781,6 +1791,12 @@ function openEditDeal(d) {
       <div class="form-group"><label class="form-label">Counterparty Solicitors</label><input class="form-input" id="f-countersol" value="${d.counterparty_solicitors||''}"></div>
     </div>
     <div class="form-row">
+      <div class="form-group"><label class="form-label">Exclusivity Period (months)</label><input class="form-input" id="f-exclusivity" type="number" value="${d.exclusivity_period||''}"></div>
+      <div class="form-group"><label class="form-label">NDA in Place</label>
+        <select class="form-select" id="f-nda"><option value="">—</option><option${d.nda_in_place==='Yes'?' selected':''}>Yes</option><option${d.nda_in_place==='No'?' selected':''}>No</option></select>
+      </div>
+    </div>
+    <div class="form-row">
       <div class="form-group"><label class="form-label">Deal Value (£)</label><input class="form-input" id="f-value" type="number" value="${d.deal_value||''}"></div>
       <div class="form-group"><label class="form-label">Target Completion</label><input class="form-input" id="f-completion" type="date" value="${d.target_completion||''}"></div>
     </div>
@@ -1813,6 +1829,8 @@ async function submitEditDeal() {
     counterparty_solicitors: document.getElementById('f-countersol').value,
     deal_value: document.getElementById('f-value').value || null,
     target_completion: document.getElementById('f-completion').value || null,
+    exclusivity_period: document.getElementById('f-exclusivity') ? document.getElementById('f-exclusivity').value || null : null,
+    nda_in_place: document.getElementById('f-nda') ? document.getElementById('f-nda').value || null : null,
     stage: document.getElementById('f-stage').value,
     rag_status: document.getElementById('f-rag').value,
     next_action: document.getElementById('f-action').value,
