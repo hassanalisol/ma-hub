@@ -407,18 +407,18 @@ async function deleteParty(id) {
   return sbFetch(`parties?id=eq.${id}`, { method: 'DELETE' });
 }
 async function loadSignatures(dealId) {
-  return sbFetch(`signatures?deal_id=eq.${dealId}&order=created_at.asc`);
+  return sbFetch(`signatures?deal_id=eq.${dealId}&order=created_at.asc`) || [];
 }
 async function loadActivityLog(dealId) {
-  return sbFetch(`activity_log?deal_id=eq.${dealId}&order=created_at.desc&limit=30`);
+  return sbFetch(`activity_log?deal_id=eq.${dealId}&order=created_at.desc&limit=30`) || [];
 }
 async function logActivity(dealId, text) {
   try {
-    await sbFetch('activity_log', { method: 'POST', body: JSON.stringify({ deal_id: dealId, text, user_name: config.userName || 'User' }) });
+    await sbFetch('activity_log', { method: 'POST', body: JSON.stringify({ deal_id: dealId, action: text, detail: config.userName || 'User' }) });
   } catch(e) {}
 }
 async function loadCriticalDates(dealId) {
-  return sbFetch(`critical_dates?deal_id=eq.${dealId}&order=date.asc`);
+  return sbFetch(`critical_dates?deal_id=eq.${dealId}&order=expected_date.asc`) || [];
 }
 
 // ═══════════════════════════════════════════════════════
@@ -657,7 +657,8 @@ async function switchDealTab(tab, el) {
   }
 
   else if (tab === 'Documents') {
-    const docs = await loadDocuments(d.id);
+    let docs = [];
+    try { docs = await loadDocuments(d.id) || []; } catch(e) { docs = []; }
     c.innerHTML = `
     <div class="section-header">
       <div class="section-title" style="font-size:16px">Document Register</div>
@@ -681,7 +682,8 @@ async function switchDealTab(tab, el) {
   }
 
   else if (tab === 'Signatures') {
-    const sigs = await loadSignatures(d.id);
+    let sigs = [];
+    try { sigs = await loadSignatures(d.id) || []; } catch(e) { sigs = []; }
     c.innerHTML = `
     <div class="section-header">
       <div class="section-title" style="font-size:16px">Signature Tracker</div>
@@ -692,9 +694,9 @@ async function switchDealTab(tab, el) {
       <div class="sig-item">
         <div>
           <div style="font-size:13.5px;color:var(--text)">${s.signatory_name||'—'}</div>
-          <div style="font-size:12px;color:var(--text3)">${s.document_name||'—'} · ${s.role||'—'}</div>
+          <div style="font-size:12px;color:var(--text3)">${s.document_name||'—'} · ${s.party||'—'}</div>
         </div>
-        <span class="badge badge-${s.signed?'green':'amber'}">${s.signed?'Signed':'Pending'}</span>
+        <span class="badge badge-amber">Pending</span>
       </div>`).join('') : '<div class="empty-state" style="padding:2rem"><p>No signatories tracked</p></div>'}
     </div>`;
   }
@@ -704,7 +706,8 @@ async function switchDealTab(tab, el) {
   }
 
   else if (tab === 'CriticalDates') {
-    const dates = await loadCriticalDates(d.id);
+    let dates = [];
+    try { dates = await loadCriticalDates(d.id) || []; } catch(e) { dates = []; }
     c.innerHTML = `
     <div class="section-header">
       <div class="section-title" style="font-size:16px">Critical Dates</div>
@@ -712,14 +715,14 @@ async function switchDealTab(tab, el) {
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Event</th><th>Date</th><th>Type</th><th>Notes</th></tr></thead>
+        <thead><tr><th>Milestone</th><th>Expected Date</th><th>Status</th><th>Actual Date</th></tr></thead>
         <tbody>
         ${dates && dates.length ? dates.map(dt => `
           <tr>
-            <td style="color:var(--text)">${dt.event||'—'}</td>
-            <td style="color:var(--gold)">${dt.date ? formatDate(dt.date) : '—'}</td>
-            <td><span class="badge badge-blue">${dt.type||'—'}</span></td>
-            <td style="color:var(--text3)">${dt.notes||'—'}</td>
+            <td style="color:var(--text)">${dt.milestone||'—'}</td>
+            <td style="color:var(--gold)">${dt.expected_date ? formatDate(dt.expected_date) : '—'}</td>
+            <td><span class="badge badge-${dt.status==='Done'?'green':'amber'}">${dt.status||'Pending'}</span></td>
+            <td style="color:var(--text3)">${dt.actual_date ? formatDate(dt.actual_date) : '—'}</td>
           </tr>`).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:2rem">No critical dates added</td></tr>'}
         </tbody>
       </table>
@@ -727,7 +730,8 @@ async function switchDealTab(tab, el) {
   }
 
   else if (tab === 'Activity') {
-    const log = await loadActivityLog(d.id);
+    let log = [];
+    try { log = await loadActivityLog(d.id) || []; } catch(e) { log = []; }
     c.innerHTML = `
     <div class="section-title" style="font-size:16px;margin-bottom:1.5rem">Activity Log</div>
     <div class="card">
@@ -735,8 +739,8 @@ async function switchDealTab(tab, el) {
       <div class="activity-item">
         <div class="activity-dot"></div>
         <div class="activity-content">
-          <div class="activity-text">${a.text||'—'}</div>
-          <div class="activity-time">${a.user_name||'—'} · ${a.created_at ? new Date(a.created_at).toLocaleString('en-GB') : '—'}</div>
+          <div class="activity-text">${a.action||'—'}${a.detail ? ' — ' + a.detail : ''}</div>
+          <div class="activity-time">${a.created_at ? new Date(a.created_at).toLocaleString('en-GB') : '—'}</div>
         </div>
       </div>`).join('') : '<div class="empty-state" style="padding:2rem"><p>No activity logged</p></div>'}
     </div>`;
