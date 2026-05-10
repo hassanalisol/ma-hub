@@ -1461,22 +1461,23 @@ function fileToBase64(file) {
 }
 
 async function readDocxAsText(file) {
-  // Read docx as binary and extract text using basic XML parsing
+  // Load JSZip from CDN if not already loaded
+  if (!window.JSZip) {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+  }
+
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = async (e) => {
       try {
-        const arrayBuffer = e.target.result;
-        const uint8 = new Uint8Array(arrayBuffer);
-        // docx is a ZIP - look for word/document.xml
-        const text = await extractDocxText(uint8);
+        const zip = await JSZip.loadAsync(e.target.result);
+        const docXml = zip.file('word/document.xml');
+        if (!docXml) { reject(new Error('Not a valid .docx file')); return; }
+        const xmlText = await docXml.async('string');
+        const text = parseWordXml(xmlText);
         resolve(text);
       } catch(err) {
-        // Fallback: try reading as text
-        const textReader = new FileReader();
-        textReader.onload = (e2) => resolve(e2.target.result);
-        textReader.onerror = reject;
-        textReader.readAsText(file);
+        reject(err);
       }
     };
     reader.onerror = reject;
@@ -1484,64 +1485,33 @@ async function readDocxAsText(file) {
   });
 }
 
-async function extractDocxText(uint8Array) {
-  // Use JSZip-like approach: find word/document.xml in zip
-  // Simple approach: convert to string and extract XML content
-  let str = '';
-  for (let i = 0; i < Math.min(uint8Array.length, 500000); i++) {
-    str += String.fromCharCode(uint8Array[i]);
-  }
-
-  // Find document.xml content
-  const startMarker = 'word/document.xml';
-  const idx = str.indexOf(startMarker);
-  if (idx === -1) {
-    // Try to extract any readable text
-    return extractReadableText(str);
-  }
-
-  // Find the XML content after the marker
-  const xmlStart = str.indexOf('<w:document', idx);
-  if (xmlStart === -1) return extractReadableText(str);
-
-  const xmlEnd = str.indexOf('</w:document>', xmlStart);
-  const xml = xmlEnd > -1 ? str.substring(xmlStart, xmlEnd + 13) : str.substring(xmlStart, xmlStart + 100000);
-
-  // Strip XML tags and extract text
-  const text = xml
-    .replace(/<w:br[^>]*\/>/g, '\n')
-    .replace(/<w:p[ >][^>]*>/g, '\n')
-    .replace(/<\/w:p>/g, '')
-    .replace(/<w:t[^>]*>/g, '')
-    .replace(/<\/w:t>/g, '')
+function parseWordXml(xml) {
+  // Parse word/document.xml and extract readable text preserving structure
+  return xml
+    .replace(/<w:br[^>]*\/>/gi, '\n')
+    .replace(/<\/w:p>/gi, '\n')
+    .replace(/<w:tab[^>]*\/>/gi, '\t')
     .replace(/<[^>]+>/g, '')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
     .replace(/&#x[0-9A-Fa-f]+;/g, ' ')
+    .replace(/&#\d+;/g, ' ')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
-
-  return text || extractReadableText(str);
 }
 
-function extractReadableText(str) {
-  // Extract printable ASCII text runs
-  let text = '';
-  let current = '';
-  for (let i = 0; i < str.length; i++) {
-    const code = str.charCodeAt(i);
-    if (code >= 32 && code < 127) {
-      current += str[i];
-    } else if (current.length > 4) {
-      text += current + ' ';
-      current = '';
-    } else {
-      current = '';
-    }
-  }
-  return text.replace(/\s+/g, ' ').trim();
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
 }
 
 function parseTargetDate(dateStr) {
