@@ -953,7 +953,7 @@ async function runHOTExtraction() {
 If any field is not found in the document, use null. Return ONLY the JSON, no other text.`;
 
     const requestBody = {
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 2000,
       messages: [{
         role: 'user',
@@ -980,7 +980,7 @@ If any field is not found in the document, use null. Return ONLY the JSON, no ot
       log('Text extracted, sending to Claude…');
 
       const textRequestBody = {
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 2000,
         messages: [{
           role: 'user',
@@ -1159,7 +1159,7 @@ ${textContent.substring(0, 15000)}`;
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': config.anthropicKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2000, messages: [{ role: 'user', content: spaPrompt }] })
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 2000, messages: [{ role: 'user', content: spaPrompt }] })
     });
 
     if (!response.ok) { const e = await response.json(); throw new Error(e.error?.message || 'API error'); }
@@ -1409,7 +1409,7 @@ Key details:
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 3000,
       messages: [{ role: 'user', content: templateInstructions }]
     })
