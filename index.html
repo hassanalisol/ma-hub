@@ -562,16 +562,8 @@ function renderDealDetail(deal) {
     <button class="btn btn-secondary btn-sm" onclick="openEditDeal(currentDeal)">Edit Deal</button>
     <button class="btn btn-danger btn-sm" onclick="archiveDeal('${d.id}')">Archive</button>`;
 
-  const tabs = [
-    {key:'Overview',label:'Overview'},
-    {key:'Parties',label:'Parties'},
-    {key:'Checklist',label:'Checklist'},
-    {key:'Documents',label:'Documents'},
-    {key:'Signatures',label:'Signatures'},
-    {key:'AI',label:'AI & Documents'},
-    {key:'CriticalDates',label:'Critical Dates'},
-    {key:'Activity',label:'Activity'}
-  ];
+  window._dealTabs = ['Overview','Parties','Checklist','Documents','Signatures','AI','CriticalDates','Activity'];
+  window._dealTabLabels = {'Overview':'Overview','Parties':'Parties','Checklist':'Checklist','Documents':'Documents','Signatures':'Signatures','AI':'AI & Documents','CriticalDates':'Critical Dates','Activity':'Activity'};
   document.getElementById('content').innerHTML = `
   <div class="deal-detail-header">
     <div class="deal-detail-name">${d.deal_name}</div>
@@ -583,7 +575,7 @@ function renderDealDetail(deal) {
     </div>
   </div>
   <div class="tabs" id="deal-tabs">
-    ${tabs.map(t => `<div class="tab${t.key==='Overview'?' active':''}" data-tab="${t.key}" onclick="switchDealTab(this.dataset.tab,this)">${t.label}</div>`).join('')}
+    ${window._dealTabs.map((t,i) => '<div class="tab' + (t==='Overview'?' active':'') + '" onclick="switchDealTab(window._dealTabs[' + i + '],this)">' + window._dealTabLabels[t] + '</div>').join('')}
   </div>
   <div id="deal-tab-content"></div>`;
 
@@ -595,7 +587,7 @@ async function switchDealTab(tab, el) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   if (el) el.classList.add('active');
   else {
-    document.querySelectorAll('.tab').forEach(t => { if (t.dataset.tab === tab) t.classList.add('active'); });
+    document.querySelectorAll('.tab').forEach((t,i) => { if (window._dealTabs && window._dealTabs[i] === tab) t.classList.add('active'); });
   }
 
   const c = document.getElementById('deal-tab-content');
