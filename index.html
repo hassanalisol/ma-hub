@@ -1732,9 +1732,26 @@ async function submitNewDeal() {
   };
   try {
     const result = await saveDeal(deal);
+    const newDealId = result[0].id;
+
+    // Pre-populate standard critical dates
+    const standardDates = [
+      'HOTs Signed', 'CA/NDA Signed', 'Exclusivity Signed', 'Exclusivity Expiry',
+      'DD Bundle Received', 'DD Report Signed Off', 'SPA Agreed',
+      'Disclosure Letter Approved', 'All Ancillaries Agreed', 'Completion',
+      'Companies House Deadline', 'SDLT Deadline', 'Stamp Duty Deadline'
+    ];
+    for (const milestone of standardDates) {
+      try {
+        await sbFetch('critical_dates', { method: 'POST', body: JSON.stringify({
+          deal_id: newDealId, milestone, status: 'Pending'
+        })});
+      } catch(e) {}
+    }
+
     closeModal();
     showNotif('Deal created', 'success');
-    await logActivity(result[0].id, `Deal created: ${name}`);
+    await logActivity(newDealId, `Deal created: ${name}`);
     await renderDashboard();
   } catch(e) { showNotif('Error: ' + e.message, 'error'); }
 }
@@ -1950,14 +1967,14 @@ function openAddDate() {
   openModal(`
   <div class="modal-header"><div class="modal-title">Add Critical Date</div><button class="close-btn" onclick="closeModal()">✕</button></div>
   <div class="modal-body">
-    <div class="form-group"><label class="form-label">Event *</label><input class="form-input" id="dt-event"></div>
+    <div class="form-group"><label class="form-label">Milestone *</label><input class="form-input" id="dt-event" placeholder="e.g. Completion"></div>
     <div class="form-row">
-      <div class="form-group"><label class="form-label">Date</label><input class="form-input" id="dt-date" type="date"></div>
-      <div class="form-group"><label class="form-label">Type</label>
-        <select class="form-select" id="dt-type"><option>Deadline</option><option>Milestone</option><option>Condition</option><option>Longstop</option><option>Other</option></select>
-      </div>
+      <div class="form-group"><label class="form-label">Expected Date</label><input class="form-input" id="dt-date" type="date"></div>
+      <div class="form-group"><label class="form-label">Actual Date</label><input class="form-input" id="dt-actual" type="date"></div>
     </div>
-    <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="dt-notes" style="min-height:60px"></textarea></div>
+    <div class="form-group"><label class="form-label">Status</label>
+      <select class="form-select" id="dt-status"><option>Pending</option><option>Done</option><option>Overdue</option><option>Extended</option></select>
+    </div>
   </div>
   <div class="modal-footer">
     <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
