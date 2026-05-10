@@ -1,0 +1,1768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M&A Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0F0F0E;
+  --bg2:#161614;
+  --bg3:#1E1E1B;
+  --bg4:#252521;
+  --border:#2A2A26;
+  --border2:#333330;
+  --text:#F0EDE6;
+  --text2:#9B9890;
+  --text3:#5A5854;
+  --gold:#C9A84C;
+  --gold2:#E8C870;
+  --gold-bg:rgba(201,168,76,0.08);
+  --gold-border:rgba(201,168,76,0.2);
+  --green:#4A9B6E;
+  --green-bg:rgba(74,155,110,0.1);
+  --amber:#C97B2A;
+  --amber-bg:rgba(201,123,42,0.1);
+  --red:#B85454;
+  --red-bg:rgba(184,84,84,0.1);
+  --blue:#4A7BB8;
+  --blue-bg:rgba(74,123,184,0.1);
+  --radius:6px;--radius-lg:10px;--radius-xl:14px;
+  --shadow:0 2px 8px rgba(0,0,0,0.3);
+  --shadow-lg:0 8px 32px rgba(0,0,0,0.4);
+  --font-display:'Playfair Display',serif;
+  --font-sans:'DM Sans',sans-serif;
+  --font-mono:'DM Mono',monospace;
+  --sidebar:240px;
+}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh;display:flex}
+
+/* Sidebar */
+.sidebar{width:var(--sidebar);min-height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:100}
+.sidebar-logo{padding:1.5rem 1.25rem 1rem;border-bottom:1px solid var(--border)}
+.sidebar-logo h1{font-family:var(--font-display);font-size:20px;font-weight:500;color:var(--gold);letter-spacing:0.02em}
+.sidebar-logo p{font-size:11px;color:var(--text3);margin-top:2px;letter-spacing:0.05em;text-transform:uppercase}
+.sidebar-nav{flex:1;padding:1rem 0}
+.nav-section{margin-bottom:1.5rem}
+.nav-label{font-size:10px;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;padding:0 1.25rem;margin-bottom:0.5rem}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 1.25rem;cursor:pointer;color:var(--text2);font-size:13px;font-weight:400;transition:all 0.15s;border-left:2px solid transparent}
+.nav-item:hover{color:var(--text);background:var(--bg3)}
+.nav-item.active{color:var(--gold);background:var(--gold-bg);border-left-color:var(--gold)}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:0.7}
+.nav-item.active svg{opacity:1}
+.sidebar-footer{padding:1rem 1.25rem;border-top:1px solid var(--border)}
+.config-btn{display:flex;align-items:center;gap:8px;color:var(--text3);font-size:12px;cursor:pointer;padding:6px 0;transition:color 0.15s}
+.config-btn:hover{color:var(--text2)}
+
+/* Main */
+.main{margin-left:var(--sidebar);flex:1;min-height:100vh;display:flex;flex-direction:column}
+.topbar{padding:1rem 1.75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg2);position:sticky;top:0;z-index:50}
+.topbar-title{font-family:var(--font-display);font-size:18px;font-weight:500;color:var(--text)}
+.topbar-actions{display:flex;gap:8px;align-items:center}
+.content{padding:1.75rem;flex:1}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:13px;cursor:pointer;font-family:var(--font-sans);transition:all 0.15s;font-weight:400}
+.btn:hover{border-color:var(--border2);background:var(--bg4);color:var(--text)}
+.btn.primary{background:var(--gold);border-color:var(--gold);color:#0F0F0E;font-weight:500}
+.btn.primary:hover{background:var(--gold2);border-color:var(--gold2)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--text2)}
+.btn.ghost:hover{background:var(--bg3);color:var(--text)}
+.btn.danger{border-color:var(--red);color:var(--red)}
+.btn.danger:hover{background:var(--red-bg)}
+.btn.sm{padding:4px 10px;font-size:12px}
+.btn.xs{padding:3px 8px;font-size:11px}
+
+/* Cards */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem}
+.card-sm{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;letter-spacing:0.02em}
+.badge.green{background:var(--green-bg);color:var(--green);border:1px solid rgba(74,155,110,0.2)}
+.badge.amber{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(201,123,42,0.2)}
+.badge.red{background:var(--red-bg);color:var(--red);border:1px solid rgba(184,84,84,0.2)}
+.badge.blue{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(74,123,184,0.2)}
+.badge.gold{background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold-border)}
+.badge.gray{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+
+/* Forms */
+.form-row{margin-bottom:1rem}
+.form-row label{display:block;font-size:12px;color:var(--text2);margin-bottom:5px;font-weight:500;letter-spacing:0.02em}
+.form-row input,.form-row select,.form-row textarea{width:100%;padding:8px 12px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:13px;font-family:var(--font-sans);transition:border-color 0.15s;outline:none}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold-bg)}
+.form-row textarea{resize:vertical;min-height:80px}
+.form-row select option{background:var(--bg3)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+/* Modal */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.modal-bg.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-xl);padding:1.75rem;width:580px;max-width:95vw;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal.wide{width:720px}
+.modal h2{font-family:var(--font-display);font-size:18px;font-weight:500;margin-bottom:1.5rem;color:var(--gold)}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--border)}
+.modal-section{margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}
+.modal-section:last-of-type{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.modal-section-title{font-size:12px;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1rem}
+
+/* Views */
+.view{display:none}.view.active{display:block}
+
+/* Stats */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.75rem}
+.stat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;position:relative;overflow:hidden}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),transparent)}
+.stat-val{font-family:var(--font-display);font-size:28px;font-weight:400;color:var(--text);line-height:1}
+.stat-lbl{font-size:11px;color:var(--text3);margin-top:6px;letter-spacing:0.04em;text-transform:uppercase}
+.stat-sub{font-size:12px;color:var(--text2);margin-top:4px}
+
+/* Deal cards */
+.deals-grid{display:grid;gap:10px}
+.deal-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;cursor:pointer;transition:all 0.15s;position:relative}
+.deal-card:hover{border-color:var(--border2);background:var(--bg3)}
+.deal-card.active-border{border-left:3px solid var(--gold)}
+.deal-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+.deal-name{font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px}
+.deal-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.deal-meta span{font-size:12px;color:var(--text2)}
+.deal-progress-wrap{margin-top:10px}
+.deal-progress-bar{height:3px;background:var(--bg4);border-radius:2px;overflow:hidden;margin-top:4px}
+.deal-progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width 0.4s ease}
+.deal-actions{display:flex;gap:4px;opacity:0;transition:opacity 0.15s}
+.deal-card:hover .deal-actions{opacity:1}
+
+/* RAG dots */
+.rag{width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block}
+.rag.green{background:var(--green)}
+.rag.amber{background:var(--amber)}
+.rag.red{background:var(--red)}
+
+/* Progress text */
+.prog-text{font-size:11px;color:var(--text3);font-family:var(--font-mono)}
+
+/* Table */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:11px;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);font-weight:500}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--bg3);color:var(--text)}
+.tbl tr:hover td:first-child{color:var(--text)}
+
+/* Checklist */
+.cl-item{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.cl-item:last-child{border-bottom:none}
+.cl-check{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border2);background:transparent;cursor:pointer;flex-shrink:0;margin-top:1px;appearance:none;-webkit-appearance:none;transition:all 0.15s;position:relative}
+.cl-check:checked{background:var(--gold);border-color:var(--gold)}
+.cl-check:checked::after{content:'✓';position:absolute;color:#0F0F0E;font-size:11px;font-weight:700;top:50%;left:50%;transform:translate(-50%,-50%)}
+.cl-name{font-size:13px;color:var(--text);flex:1}
+.cl-name.done{text-decoration:line-through;color:var(--text3)}
+.cl-meta{font-size:11px;color:var(--text3);margin-top:2px}
+.cl-cat-header{font-size:11px;color:var(--gold);letter-spacing:0.08em;text-transform:uppercase;padding:1rem 0 0.5rem;font-weight:500}
+
+/* Section headers */
+.section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.section-title{font-size:13px;font-weight:500;color:var(--text);letter-spacing:0.02em}
+
+/* Tabs */
+.deal-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:1.5rem}
+.deal-tab{padding:8px 16px;font-size:13px;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.15s;font-family:var(--font-sans)}
+.deal-tab:hover{color:var(--text)}
+.deal-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* Activity log */
+.act-item{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)}
+.act-item:last-child{border-bottom:none}
+.act-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:6px}
+.act-text{font-size:13px;color:var(--text2);flex:1}
+.act-time{font-size:11px;color:var(--text3);font-family:var(--font-mono)}
+
+/* Sig status */
+.sig-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;display:inline-block;margin-right:4px}
+.sig-dot.signed{background:var(--green)}
+.sig-dot.pending{background:var(--amber)}
+.sig-dot.not-sent{background:var(--text3)}
+
+/* Config panel */
+.config-panel{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-xl);padding:1.75rem;max-width:500px}
+.config-panel h2{font-family:var(--font-display);font-size:18px;color:var(--gold);margin-bottom:1.5rem}
+
+/* Empty */
+.empty{text-align:center;padding:3rem;color:var(--text3)}
+.empty-icon{font-size:32px;margin-bottom:0.75rem;opacity:0.4}
+.empty p{font-size:13px}
+
+/* Back button */
+.back-btn{display:inline-flex;align-items:center;gap:6px;color:var(--text2);font-size:13px;cursor:pointer;margin-bottom:1.25rem;background:none;border:none;font-family:var(--font-sans);padding:0;transition:color 0.15s}
+.back-btn:hover{color:var(--gold)}
+
+/* Pipeline view */
+.pipeline{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:1.75rem}
+.pipeline-col{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:0.75rem;min-height:120px}
+.pipeline-col-hdr{font-size:10px;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.5rem;font-weight:500}
+.pipeline-count{font-family:var(--font-display);font-size:20px;color:var(--text);margin-bottom:4px}
+.pipeline-val{font-size:11px;color:var(--text2)}
+
+/* Divider */
+.divider{height:1px;background:var(--border);margin:1.25rem 0}
+
+/* Notification */
+.notif{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:12px 16px;font-size:13px;color:var(--text);box-shadow:var(--shadow-lg);z-index:999;transform:translateY(100px);opacity:0;transition:all 0.3s;max-width:300px}
+.notif.show{transform:translateY(0);opacity:1}
+.notif.success{border-left:3px solid var(--green)}
+.notif.error{border-left:3px solid var(--red)}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* Critical dates */
+.cd-row{display:grid;grid-template-columns:2fr 1fr 1fr 100px;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.cd-row:last-child{border-bottom:none}
+.cd-label{font-size:13px;color:var(--text2)}
+.cd-date{font-size:12px;color:var(--text);font-family:var(--font-mono)}
+.cd-date.overdue{color:var(--red)}
+.cd-date.empty{color:var(--text3)}
+
+/* Doc status select */
+.status-select{font-size:12px;padding:3px 8px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg3);color:var(--text2);font-family:var(--font-sans);cursor:pointer}
+.status-select:focus{outline:none;border-color:var(--gold)}
+
+/* Loading */
+.loading{display:flex;align-items:center;gap:8px;color:var(--text3);font-size:13px;padding:2rem}
+.spinner{width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <h1>M&A Hub</h1>
+    <p>Share Transaction Manager</p>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-label">Overview</div>
+      <div class="nav-item active" onclick="navigate('dashboard',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item" onclick="navigate('pipeline',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        Pipeline
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Deals</div>
+      <div class="nav-item" onclick="navigate('deals',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+        All Deals
+      </div>
+      <div class="nav-item" onclick="navigate('postcomplete',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Post-Completion
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Settings</div>
+      <div class="nav-item" onclick="navigate('config',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Configuration
+      </div>
+    </div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="config-btn" onclick="navigate('config',null)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+      API Configuration
+    </div>
+  </div>
+</nav>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">Dashboard</div>
+    <div class="topbar-actions" id="topbar-actions">
+      <button class="btn primary" onclick="openNewDeal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        New Deal
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Dashboard -->
+    <div id="view-dashboard" class="view active">
+      <div class="stat-grid" id="stat-grid"></div>
+      <div class="section-hdr">
+        <span class="section-title">Active Matters</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="filter-status" onchange="renderDashboard()" class="status-select">
+            <option value="">All statuses</option>
+            <option>Active</option><option>Exchange</option><option>Completion</option>
+            <option>Post-Completion</option><option>Completed</option><option>Aborted</option>
+          </select>
+          <select id="filter-role" onchange="renderDashboard()" class="status-select">
+            <option value="">Both sides</option>
+            <option>Buyer</option><option>Seller</option>
+          </select>
+        </div>
+      </div>
+      <div id="deals-list"></div>
+    </div>
+
+    <!-- Pipeline -->
+    <div id="view-pipeline" class="view">
+      <div class="pipeline" id="pipeline-grid"></div>
+      <div class="section-hdr"><span class="section-title">All Matters by Stage</span></div>
+      <div id="pipeline-list"></div>
+    </div>
+
+    <!-- All Deals -->
+    <div id="view-deals" class="view">
+      <div id="all-deals-content"></div>
+    </div>
+
+    <!-- Deal Detail -->
+    <div id="view-deal-detail" class="view">
+      <button class="back-btn" onclick="navigate('dashboard',document.querySelector('.nav-item'))">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Back to Dashboard
+      </button>
+      <div id="deal-detail-content"></div>
+    </div>
+
+    <!-- Post-Completion -->
+    <div id="view-postcomplete" class="view">
+      <div id="postcomplete-content"></div>
+    </div>
+
+    <!-- Config -->
+    <div id="view-config" class="view">
+      <div class="config-panel">
+        <h2>Configuration</h2>
+        <div class="form-row">
+          <label>Supabase Project URL</label>
+          <input id="cfg-supabase-url" placeholder="https://xxxxxxxxxxxx.supabase.co" type="url">
+        </div>
+        <div class="form-row">
+          <label>Supabase Anon Key</label>
+          <input id="cfg-supabase-key" placeholder="eyJ..." type="password">
+        </div>
+        <div class="form-row">
+          <label>Anthropic API Key</label>
+          <input id="cfg-anthropic-key" placeholder="sk-ant-..." type="password">
+        </div>
+        <div class="form-row">
+          <label>Your Name / Initials</label>
+          <input id="cfg-name" placeholder="e.g. H. Ali">
+        </div>
+        <button class="btn primary" onclick="saveConfig()" style="margin-top:0.5rem">Save Configuration</button>
+        <p style="font-size:11px;color:var(--text3);margin-top:0.75rem">Credentials stored locally in your browser. Never transmitted except directly to Supabase and Anthropic.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- New/Edit Deal Modal -->
+<div class="modal-bg" id="modal-deal">
+  <div class="modal wide">
+    <h2 id="modal-deal-h">New Deal</h2>
+    <div class="modal-section">
+      <div class="modal-section-title">Matter Details</div>
+      <div class="grid3">
+        <div class="form-row"><label>Matter Reference</label><input id="f-ref" placeholder="e.g. HAD/2026/001"></div>
+        <div class="form-row" style="grid-column:span 2"><label>Deal Name</label><input id="f-name" placeholder="e.g. Acquisition of ABC Holdings Ltd"></div>
+      </div>
+      <div class="grid2">
+        <div class="form-row"><label>Transaction Type</label>
+          <select id="f-type">
+            <option>Share Purchase Agreement</option>
+            <option>Share Sale Agreement</option>
+          </select>
+        </div>
+        <div class="form-row"><label>Client Role</label>
+          <select id="f-role">
+            <option>Buyer</option>
+            <option>Seller</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Parties</div>
+      <div class="grid2">
+        <div class="form-row"><label>Client / Company</label><input id="f-client" placeholder="Client name"></div>
+        <div class="form-row"><label>Counterparty</label><input id="f-counter" placeholder="Other side"></div>
+        <div class="form-row"><label>Counterparty Solicitors</label><input id="f-cpsols" placeholder="Firm name"></div>
+        <div class="form-row"><label>Target Company</label><input id="f-target" placeholder="Company being acquired/sold"></div>
+      </div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Commercial</div>
+      <div class="grid3">
+        <div class="form-row"><label>Deal Value (£)</label><input id="f-value" type="number" placeholder="0"></div>
+        <div class="form-row"><label>Target Completion</label><input id="f-date" type="date"></div>
+        <div class="form-row"><label>Priority</label>
+          <select id="f-priority"><option>High</option><option selected>Medium</option><option>Low</option></select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="form-row"><label>RAG Status</label>
+          <select id="f-rag"><option>Green</option><option>Amber</option><option>Red</option></select>
+        </div>
+        <div class="form-row"><label>Status</label>
+          <select id="f-status">
+            <option>Active</option><option>Exchange</option><option>Completion</option>
+            <option>Post-Completion</option><option>Completed</option><option>Aborted</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="form-row"><label>Next Action</label><input id="f-next" placeholder="What needs to happen next?"></div>
+    <div class="form-row"><label>Notes</label><textarea id="f-notes" placeholder="Any deal notes..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn ghost" onclick="closeModal('modal-deal')">Cancel</button>
+      <button class="btn primary" onclick="saveDeal()">Save Deal</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Checklist Item Modal -->
+<div class="modal-bg" id="modal-cl-item">
+  <div class="modal">
+    <h2>Add Checklist Item</h2>
+    <div class="form-row"><label>Item / Condition</label><input id="ci-name" placeholder="e.g. Board minutes approving acquisition"></div>
+    <div class="grid2">
+      <div class="form-row"><label>Category</label>
+        <select id="ci-cat">
+          <option>AML & Onboarding</option>
+          <option>Heads of Terms</option>
+          <option>Due Diligence</option>
+          <option>Documentation</option>
+          <option>Pre-Completion</option>
+          <option>Completion</option>
+          <option>Post-Completion</option>
+        </select>
+      </div>
+      <div class="form-row"><label>Responsible</label><input id="ci-resp" placeholder="e.g. Buyer's solicitors"></div>
+    </div>
+    <div class="grid2">
+      <div class="form-row"><label>Progress Value (%)</label>
+        <select id="ci-prog">
+          <option value="0">0%</option><option value="5">5%</option><option value="10">10%</option>
+          <option value="15">15%</option><option value="20">20%</option><option value="25">25%</option>
+          <option value="30">30%</option><option value="35">35%</option><option value="40">40%</option>
+          <option value="45">45%</option><option value="50">50%</option><option value="55">55%</option>
+          <option value="60">60%</option><option value="65">65%</option><option value="70">70%</option>
+          <option value="75">75%</option><option value="80">80%</option><option value="85">85%</option>
+          <option value="90">90%</option><option value="95">95%</option><option value="100">100%</option>
+        </select>
+      </div>
+      <div class="form-row"><label>Due Date</label><input id="ci-due" type="date"></div>
+    </div>
+    <div class="form-row"><label>Notes</label><textarea id="ci-notes" placeholder="Any notes..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn ghost" onclick="closeModal('modal-cl-item')">Cancel</button>
+      <button class="btn primary" onclick="saveClItem()">Add Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Document Modal -->
+<div class="modal-bg" id="modal-doc">
+  <div class="modal">
+    <h2>Log Document</h2>
+    <div class="form-row"><label>Document Name</label><input id="doc-name" placeholder="e.g. Share Purchase Agreement v3"></div>
+    <div class="grid2">
+      <div class="form-row"><label>Document Type</label>
+        <select id="doc-type">
+          <option>Share Purchase Agreement</option>
+          <option>Disclosure Letter</option>
+          <option>Tax Covenant</option>
+          <option>Board Minutes — Buyer</option>
+          <option>Board Minutes — Target</option>
+          <option>Board Minutes — Seller</option>
+          <option>Shareholder Resolution</option>
+          <option>Stock Transfer Form</option>
+          <option>Share Certificate</option>
+          <option>Resignation Letter</option>
+          <option>Completion Statement</option>
+          <option>Due Diligence Report</option>
+          <option>Heads of Terms</option>
+          <option>NDA / Confidentiality Agreement</option>
+          <option>Exclusivity Agreement</option>
+          <option>W&I Insurance</option>
+          <option>Companies House Form</option>
+          <option>SDLT Return</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-row"><label>Version</label><input id="doc-ver" placeholder="e.g. v1, Final, Execution"></div>
+      <div class="form-row"><label>Status</label>
+        <select id="doc-status">
+          <option>Draft</option><option>Under Review</option><option>Agreed</option>
+          <option>Execution Copy</option><option>Signed</option><option>Filed</option>
+        </select>
+      </div>
+      <div class="form-row"><label>Responsible Party</label><input id="doc-party" placeholder="e.g. Buyer's solicitors"></div>
+    </div>
+    <div class="form-row"><label>Notes</label><textarea id="doc-notes" placeholder="Any notes..."></textarea></div>
+    <div id="doc-cl-match" style="display:none;margin-bottom:1rem;padding:10px 12px;background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:var(--radius);font-size:12px;color:var(--gold)"></div>
+    <div class="modal-footer">
+      <button class="btn ghost" onclick="closeModal('modal-doc')">Cancel</button>
+      <button class="btn primary" onclick="saveDoc()">Log Document</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Signatory Modal -->
+<div class="modal-bg" id="modal-sig">
+  <div class="modal">
+    <h2>Add Signatory</h2>
+    <div class="form-row"><label>Document</label><input id="sig-doc" placeholder="e.g. Share Purchase Agreement"></div>
+    <div class="grid2">
+      <div class="form-row"><label>Signatory Name</label><input id="sig-name" placeholder="e.g. John Smith, Director"></div>
+      <div class="form-row"><label>Party / Entity</label><input id="sig-party" placeholder="e.g. ABC Ltd (Seller)"></div>
+      <div class="form-row"><label>Signature Type</label>
+        <select id="sig-type"><option>Wet Ink</option><option>Electronic</option><option>Deed</option></select>
+      </div>
+      <div class="form-row"><label>Status</label>
+        <select id="sig-status-sel"><option>Not Sent</option><option>Sent / Pending</option><option>Signed</option></select>
+      </div>
+    </div>
+    <div class="form-row"><label>Notes</label><textarea id="sig-notes" placeholder="e.g. Witness required, overseas signatory"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn ghost" onclick="closeModal('modal-sig')">Cancel</button>
+      <button class="btn primary" onclick="saveSig()">Add Signatory</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Party Modal -->
+<div class="modal-bg" id="modal-party">
+  <div class="modal">
+    <h2>Add Party / Contact</h2>
+    <div class="grid2">
+      <div class="form-row"><label>Name</label><input id="p-name" placeholder="Full name"></div>
+      <div class="form-row"><label>Role</label>
+        <select id="p-role">
+          <option>Director (Buyer)</option><option>Director (Seller)</option><option>Director (Target)</option>
+          <option>Shareholder (Buyer)</option><option>Shareholder (Seller)</option>
+          <option>Solicitor — Buyer</option><option>Solicitor — Seller</option>
+          <option>Accountant — Buyer</option><option>Accountant — Seller</option>
+          <option>Tax Adviser</option><option>Financial Adviser</option>
+          <option>Company Secretary</option><option>Other</option>
+        </select>
+      </div>
+      <div class="form-row"><label>Firm / Company</label><input id="p-firm" placeholder="Firm or company name"></div>
+      <div class="form-row"><label>Email</label><input id="p-email" type="email" placeholder="email@example.com"></div>
+      <div class="form-row"><label>Phone</label><input id="p-phone" placeholder="+44..."></div>
+      <div class="form-row"><label>Notes</label><input id="p-notes" placeholder="Any notes..."></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn ghost" onclick="closeModal('modal-party')">Cancel</button>
+      <button class="btn primary" onclick="saveParty()">Add Party</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Critical Date Modal -->
+<div class="modal-bg" id="modal-cd">
+  <div class="modal">
+    <h2>Add Critical Date</h2>
+    <div class="form-row"><label>Milestone</label>
+      <select id="cd-milestone">
+        <option>AML & Source of Funds Complete</option>
+        <option>HoTs Signed</option>
+        <option>Exclusivity Expiry</option>
+        <option>DD Bundle Received</option>
+        <option>DD Report Signed Off</option>
+        <option>SPA Received</option>
+        <option>SPA Agreed</option>
+        <option>Disclosure Letter Approved</option>
+        <option>All Ancillaries Agreed</option>
+        <option>Exchange</option>
+        <option>Completion</option>
+        <option>Companies House Deadline</option>
+        <option>SDLT Deadline</option>
+        <option>Stamp Duty Deadline</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="grid2">
+      <div class="form-row"><label>Expected Date</label><input id="cd-exp" type="date"></div>
+      <div class="form-row"><label>Actual Date</label><input id="cd-act" type="date"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn ghost" onclick="closeModal('modal-cd')">Cancel</button>
+      <button class="btn primary" onclick="saveCritDate()">Add Date</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notification -->
+<div class="notif" id="notif"></div>
+
+<script>
+// ═══════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════
+let CFG = {
+  supabaseUrl: localStorage.getItem('mah_sb_url') || '',
+  supabaseKey: localStorage.getItem('mah_sb_key') || '',
+  anthropicKey: localStorage.getItem('mah_ant_key') || '',
+  userName: localStorage.getItem('mah_name') || ''
+};
+
+function saveConfig() {
+  CFG.supabaseUrl = document.getElementById('cfg-supabase-url').value.trim();
+  CFG.supabaseKey = document.getElementById('cfg-supabase-key').value.trim();
+  CFG.anthropicKey = document.getElementById('cfg-anthropic-key').value.trim();
+  CFG.userName = document.getElementById('cfg-name').value.trim();
+  localStorage.setItem('mah_sb_url', CFG.supabaseUrl);
+  localStorage.setItem('mah_sb_key', CFG.supabaseKey);
+  localStorage.setItem('mah_ant_key', CFG.anthropicKey);
+  localStorage.setItem('mah_name', CFG.userName);
+  notify('Configuration saved', 'success');
+  init();
+}
+
+function loadConfigUI() {
+  document.getElementById('cfg-supabase-url').value = CFG.supabaseUrl;
+  document.getElementById('cfg-supabase-key').value = CFG.supabaseKey;
+  document.getElementById('cfg-anthropic-key').value = CFG.anthropicKey;
+  document.getElementById('cfg-name').value = CFG.userName;
+}
+
+// ═══════════════════════════════════════════
+// SUPABASE API
+// ═══════════════════════════════════════════
+async function sb(table, method='GET', body=null, query='') {
+  if (!CFG.supabaseUrl || !CFG.supabaseKey) {
+    notify('Please configure Supabase credentials first', 'error');
+    navigate('config', null);
+    return null;
+  }
+  const url = `${CFG.supabaseUrl}/rest/v1/${table}${query}`;
+  const opts = {
+    method,
+    headers: {
+      'apikey': CFG.supabaseKey,
+      'Authorization': `Bearer ${CFG.supabaseKey}`,
+      'Content-Type': 'application/json',
+      'Prefer': method === 'POST' ? 'return=representation' : (method === 'PATCH' ? 'return=representation' : '')
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  try {
+    const r = await fetch(url, opts);
+    if (!r.ok) { const e = await r.text(); console.error(e); return null; }
+    if (method === 'DELETE' || r.status === 204) return true;
+    return await r.json();
+  } catch(e) { console.error(e); notify('Connection error — check Supabase config', 'error'); return null; }
+}
+
+const getDeals = () => sb('deals', 'GET', null, '?order=created_at.desc');
+const getDeal = id => sb('deals', 'GET', null, `?id=eq.${id}&limit=1`);
+const insertDeal = d => sb('deals', 'POST', d);
+const updateDeal = (id, d) => sb('deals', 'PATCH', d, `?id=eq.${id}`);
+const deleteDeal = id => sb('deals', 'DELETE', null, `?id=eq.${id}`);
+
+const getItems = dealId => sb('checklist_items', 'GET', null, `?deal_id=eq.${dealId}&order=order_index.asc`);
+const insertItem = d => sb('checklist_items', 'POST', d);
+const updateItem = (id, d) => sb('checklist_items', 'PATCH', d, `?id=eq.${id}`);
+const deleteItem = id => sb('checklist_items', 'DELETE', null, `?id=eq.${id}`);
+
+const getDocs = dealId => sb('documents', 'GET', null, `?deal_id=eq.${dealId}&order=created_at.desc`);
+const insertDoc = d => sb('documents', 'POST', d);
+const updateDoc = (id, d) => sb('documents', 'PATCH', d, `?id=eq.${id}`);
+const deleteDoc = id => sb('documents', 'DELETE', null, `?id=eq.${id}`);
+
+const getSigs = dealId => sb('signatures', 'GET', null, `?deal_id=eq.${dealId}`);
+const insertSig = d => sb('signatures', 'POST', d);
+const updateSig = (id, d) => sb('signatures', 'PATCH', d, `?id=eq.${id}`);
+const deleteSig = id => sb('signatures', 'DELETE', null, `?id=eq.${id}`);
+
+const getParties = dealId => sb('parties', 'GET', null, `?deal_id=eq.${dealId}`);
+const insertParty = d => sb('parties', 'POST', d);
+const deleteParty = id => sb('parties', 'DELETE', null, `?id=eq.${id}`);
+
+const getLogs = dealId => sb('activity_log', 'GET', null, `?deal_id=eq.${dealId}&order=created_at.desc&limit=50`);
+const insertLog = d => sb('activity_log', 'POST', d);
+
+const getCritDates = dealId => sb('critical_dates', 'GET', null, `?deal_id=eq.${dealId}&order=expected_date.asc`);
+const insertCritDate = d => sb('critical_dates', 'POST', d);
+const updateCritDate = (id, d) => sb('critical_dates', 'PATCH', d, `?id=eq.${id}`);
+const deleteCritDate = id => sb('critical_dates', 'DELETE', null, `?id=eq.${id}`);
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let deals = [];
+let currentDealId = null;
+let editingDealId = null;
+let dealDetailTab = 'checklist';
+
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+function navigate(view, navEl) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(`view-${view}`).classList.add('active');
+  if (navEl) navEl.classList.add('active');
+
+  const titles = {
+    dashboard: 'Dashboard',
+    pipeline: 'Pipeline',
+    deals: 'All Deals',
+    'deal-detail': 'Deal Detail',
+    postcomplete: 'Post-Completion',
+    config: 'Configuration'
+  };
+  document.getElementById('topbar-title').textContent = titles[view] || 'M&A Hub';
+
+  const showNew = ['dashboard', 'deals', 'pipeline'].includes(view);
+  document.getElementById('topbar-actions').innerHTML = showNew
+    ? `<button class="btn primary" onclick="openNewDeal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> New Deal</button>`
+    : '';
+
+  if (view === 'dashboard') renderDashboard();
+  if (view === 'pipeline') renderPipeline();
+  if (view === 'deals') renderAllDeals();
+  if (view === 'postcomplete') renderPostComplete();
+  if (view === 'config') loadConfigUI();
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+async function init() {
+  if (!CFG.supabaseUrl || !CFG.supabaseKey) {
+    document.getElementById('deals-list').innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">⚙️</div>
+        <p>Please configure your Supabase credentials to get started.</p>
+        <button class="btn primary" style="margin-top:1rem" onclick="navigate('config',null)">Open Configuration</button>
+      </div>`;
+    renderStats([]);
+    return;
+  }
+  deals = await getDeals() || [];
+  renderDashboard();
+}
+
+// ═══════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+function fmt(v) {
+  if (!v || v == 0) return '';
+  return '£' + Number(v).toLocaleString('en-GB');
+}
+
+function fmtDate(d) {
+  if (!d) return '';
+  return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function fmtTS(ts) {
+  if (!ts) return '';
+  return new Date(ts).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+function isOverdue(dateStr) {
+  if (!dateStr) return false;
+  return new Date(dateStr) < new Date() && dateStr;
+}
+
+function ragBadge(r) {
+  const map = { Green: 'green', Amber: 'amber', Red: 'red' };
+  return `<span class="badge ${map[r] || 'gray'}">${r}</span>`;
+}
+
+function priorityBadge(p) {
+  const map = { High: 'red', Medium: 'amber', Low: 'gray' };
+  return `<span class="badge ${map[p] || 'gray'}">${p}</span>`;
+}
+
+function roleBadge(r) {
+  return `<span class="badge ${r === 'Buyer' ? 'blue' : 'gold'}">${r}</span>`;
+}
+
+function notify(msg, type = 'success') {
+  const el = document.getElementById('notif');
+  el.textContent = msg;
+  el.className = `notif ${type} show`;
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ═══════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════
+function renderStats(d) {
+  const active = d.filter(x => !['Completed', 'Aborted'].includes(x.status)).length;
+  const completing = d.filter(x => x.status === 'Completion').length;
+  const totalVal = d.filter(x => x.status !== 'Aborted').reduce((a, b) => a + (Number(b.deal_value) || 0), 0);
+  const overdue = d.filter(x => isOverdue(x.target_completion) && !['Completed', 'Aborted'].includes(x.status)).length;
+  document.getElementById('stat-grid').innerHTML = `
+    <div class="stat">
+      <div class="stat-val">${active}</div>
+      <div class="stat-lbl">Active Matters</div>
+      <div class="stat-sub">${d.filter(x => x.status === 'Completed').length} completed</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">${completing}</div>
+      <div class="stat-lbl">At Completion</div>
+      <div class="stat-sub">${d.filter(x => x.status === 'Exchange').length} at exchange</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">${totalVal ? '£' + (totalVal >= 1000000 ? (totalVal / 1000000).toFixed(1) + 'm' : Math.round(totalVal / 1000) + 'k') : '—'}</div>
+      <div class="stat-lbl">Total Deal Value</div>
+      <div class="stat-sub">${d.length} matters total</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" style="color:${overdue > 0 ? 'var(--red)' : 'var(--text)'}">${overdue}</div>
+      <div class="stat-lbl">Overdue</div>
+      <div class="stat-sub">Past target completion</div>
+    </div>
+  `;
+}
+
+async function renderDashboard() {
+  deals = await getDeals() || [];
+  renderStats(deals);
+
+  const statusFilter = document.getElementById('filter-status')?.value || '';
+  const roleFilter = document.getElementById('filter-role')?.value || '';
+  let filtered = deals.filter(d => {
+    if (statusFilter && d.status !== statusFilter) return false;
+    if (roleFilter && d.client_role !== roleFilter) return false;
+    return true;
+  });
+
+  const el = document.getElementById('deals-list');
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">📁</div><p>No deals found. Click "New Deal" to get started.</p></div>`;
+    return;
+  }
+  el.innerHTML = filtered.map(d => dealCard(d)).join('');
+}
+
+function dealCard(d) {
+  const prog = d.progress || 0;
+  const overdue = isOverdue(d.target_completion) && !['Completed', 'Aborted'].includes(d.status);
+  return `<div class="deal-card ${d.status === 'Active' ? 'active-border' : ''}" onclick="openDeal('${d.id}')">
+    <div class="deal-card-header">
+      <div style="flex:1">
+        <div class="deal-name">${d.deal_name}</div>
+        <div class="deal-meta">
+          ${roleBadge(d.client_role)}
+          ${ragBadge(d.rag_status)}
+          ${priorityBadge(d.priority)}
+          ${d.matter_ref ? `<span class="badge gray">${d.matter_ref}</span>` : ''}
+          ${d.deal_value ? `<span style="font-size:12px;color:var(--text2)">${fmt(d.deal_value)}</span>` : ''}
+          ${d.target_completion ? `<span style="font-size:12px;color:${overdue ? 'var(--red)' : 'var(--text3)'}">⏱ ${fmtDate(d.target_completion)}</span>` : ''}
+        </div>
+        ${d.client_name ? `<div style="font-size:12px;color:var(--text3);margin-top:4px">${d.client_name} ${d.counterparty ? `→ ${d.counterparty}` : ''}</div>` : ''}
+        ${d.next_action ? `<div style="font-size:12px;color:var(--amber);margin-top:4px">→ ${d.next_action}</div>` : ''}
+      </div>
+      <div class="deal-actions" onclick="event.stopPropagation()">
+        <button class="btn xs" onclick="editDeal('${d.id}')">Edit</button>
+        <button class="btn xs danger" onclick="confirmDeleteDeal('${d.id}')">Delete</button>
+      </div>
+    </div>
+    <div class="deal-progress-wrap">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:11px;color:var(--text3)">${d.status}</span>
+        <span class="prog-text">${prog}%</span>
+      </div>
+      <div class="deal-progress-bar"><div class="deal-progress-fill" style="width:${prog}%"></div></div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+// PIPELINE
+// ═══════════════════════════════════════════
+function renderPipeline() {
+  const stages = ['Active', 'Exchange', 'Completion', 'Post-Completion', 'Completed', 'Aborted'];
+  const grid = document.getElementById('pipeline-grid');
+  grid.innerHTML = stages.map(s => {
+    const sd = deals.filter(d => d.status === s);
+    const val = sd.reduce((a, b) => a + (Number(b.deal_value) || 0), 0);
+    return `<div class="pipeline-col">
+      <div class="pipeline-col-hdr">${s}</div>
+      <div class="pipeline-count">${sd.length}</div>
+      ${val ? `<div class="pipeline-val">${fmt(val)}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  const list = document.getElementById('pipeline-list');
+  list.innerHTML = stages.map(s => {
+    const sd = deals.filter(d => d.status === s);
+    if (!sd.length) return '';
+    return `<div style="margin-bottom:1.5rem">
+      <div class="section-hdr"><span class="section-title" style="color:var(--gold)">${s}</span><span style="font-size:12px;color:var(--text3)">${sd.length} matter${sd.length !== 1 ? 's' : ''}</span></div>
+      ${sd.map(d => dealCard(d)).join('')}
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+// ALL DEALS
+// ═══════════════════════════════════════════
+function renderAllDeals() {
+  const el = document.getElementById('all-deals-content');
+  if (!deals.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">📁</div><p>No deals yet.</p></div>'; return; }
+  el.innerHTML = `<div class="card">
+    <table class="tbl">
+      <thead><tr>
+        <th>Matter</th><th>Deal Name</th><th>Role</th><th>Client</th>
+        <th>Value</th><th>Status</th><th>Progress</th><th>Target</th><th></th>
+      </tr></thead>
+      <tbody>${deals.map(d => `<tr onclick="openDeal('${d.id}')" style="cursor:pointer">
+        <td><span class="badge gray" style="font-family:var(--font-mono)">${d.matter_ref || '—'}</span></td>
+        <td style="color:var(--text);font-weight:500">${d.deal_name}</td>
+        <td>${roleBadge(d.client_role)}</td>
+        <td>${d.client_name || '—'}</td>
+        <td>${fmt(d.deal_value) || '—'}</td>
+        <td>${ragBadge(d.rag_status)}</td>
+        <td><div style="display:flex;align-items:center;gap:8px">
+          <div class="deal-progress-bar" style="width:80px"><div class="deal-progress-fill" style="width:${d.progress || 0}%"></div></div>
+          <span class="prog-text">${d.progress || 0}%</span>
+        </div></td>
+        <td style="color:${isOverdue(d.target_completion) ? 'var(--red)' : ''}">${fmtDate(d.target_completion) || '—'}</td>
+        <td onclick="event.stopPropagation()">
+          <button class="btn xs" onclick="editDeal('${d.id}')">Edit</button>
+        </td>
+      </tr>`).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+// DEAL DETAIL
+// ═══════════════════════════════════════════
+async function openDeal(id) {
+  currentDealId = id;
+  navigate('deal-detail', null);
+  await renderDealDetail(id);
+}
+
+async function renderDealDetail(id) {
+  const dealArr = await getDeal(id);
+  if (!dealArr || !dealArr.length) return;
+  const d = dealArr[0];
+
+  document.getElementById('topbar-title').textContent = d.deal_name;
+  document.getElementById('topbar-actions').innerHTML = `
+    <button class="btn" onclick="editDeal('${id}')">Edit Deal</button>
+    <button class="btn primary" onclick="openClosingBook('${id}')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+      Closing Book
+    </button>`;
+
+  const tabs = ['checklist', 'documents', 'signatures', 'parties', 'dates', 'log'];
+  const tabLabels = ['Checklist', 'Documents', 'Signatures', 'Parties & Contacts', 'Critical Dates', 'Activity Log'];
+
+  document.getElementById('deal-detail-content').innerHTML = `
+    <div class="card" style="margin-bottom:1rem;padding:1rem 1.25rem">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+        ${roleBadge(d.client_role)} ${ragBadge(d.rag_status)} ${priorityBadge(d.priority)}
+        ${d.matter_ref ? `<span class="badge gray" style="font-family:var(--font-mono)">${d.matter_ref}</span>` : ''}
+        ${d.deal_value ? `<span style="font-size:13px;color:var(--text2)">${fmt(d.deal_value)}</span>` : ''}
+        ${d.target_completion ? `<span style="font-size:13px;color:${isOverdue(d.target_completion) ? 'var(--red)' : 'var(--text2)'}">Target: ${fmtDate(d.target_completion)}</span>` : ''}
+        ${d.client_name ? `<span style="font-size:13px;color:var(--text2)">${d.client_name}${d.counterparty ? ` → ${d.counterparty}` : ''}</span>` : ''}
+      </div>
+      ${d.next_action ? `<div style="margin-top:8px;font-size:13px;color:var(--amber)">→ Next: ${d.next_action}</div>` : ''}
+      <div style="margin-top:10px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:11px;color:var(--text3)">Progress</span>
+          <span class="prog-text">${d.progress || 0}%</span>
+        </div>
+        <div class="deal-progress-bar" style="height:6px"><div class="deal-progress-fill" style="width:${d.progress || 0}%"></div></div>
+      </div>
+    </div>
+    <div class="deal-tabs">
+      ${tabs.map((t, i) => `<div class="deal-tab ${t === dealDetailTab ? 'active' : ''}" onclick="switchDealTab('${t}',this)">${tabLabels[i]}</div>`).join('')}
+    </div>
+    <div id="deal-tab-content"></div>
+  `;
+  await renderDealTab(id, dealDetailTab);
+}
+
+function switchDealTab(tab, el) {
+  dealDetailTab = tab;
+  document.querySelectorAll('.deal-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderDealTab(currentDealId, tab);
+}
+
+async function renderDealTab(id, tab) {
+  const el = document.getElementById('deal-tab-content');
+  el.innerHTML = `<div class="loading"><div class="spinner"></div> Loading...</div>`;
+  if (tab === 'checklist') await renderChecklist(id, el);
+  if (tab === 'documents') await renderDocuments(id, el);
+  if (tab === 'signatures') await renderSignatures(id, el);
+  if (tab === 'parties') await renderParties(id, el);
+  if (tab === 'dates') await renderCritDates(id, el);
+  if (tab === 'log') await renderLog(id, el);
+}
+
+// ═══════════════════════════════════════════
+// CHECKLIST
+// ═══════════════════════════════════════════
+const CHECKLIST_TEMPLATES = {
+  Buyer: [
+    { category: 'AML & Onboarding', milestone: 'AML checks completed', responsible: "Your firm", progress_value: 3, order_index: 1 },
+    { category: 'AML & Onboarding', milestone: 'Source of funds verified', responsible: "Your firm", progress_value: 5, order_index: 2 },
+    { category: 'Heads of Terms', milestone: 'HoTs reviewed / drafted', responsible: "Your firm", progress_value: 7, order_index: 3 },
+    { category: 'Heads of Terms', milestone: 'HoTs signed by all parties', responsible: "All parties", progress_value: 10, order_index: 4 },
+    { category: 'Due Diligence', milestone: 'NDA / Confidentiality agreement signed', responsible: "All parties", progress_value: 12, order_index: 5 },
+    { category: 'Due Diligence', milestone: 'DD questionnaire sent to seller', responsible: "Your firm", progress_value: 14, order_index: 6 },
+    { category: 'Due Diligence', milestone: 'DD bundle received from seller', responsible: "Seller's solicitors", progress_value: 18, order_index: 7 },
+    { category: 'Due Diligence', milestone: 'DD review completed (CoCounsel + manual)', responsible: "Your firm", progress_value: 25, order_index: 8 },
+    { category: 'Due Diligence', milestone: 'Employment aspects reviewed', responsible: "Your firm", progress_value: 28, order_index: 9 },
+    { category: 'Due Diligence', milestone: 'DD report drafted', responsible: "Your firm", progress_value: 30, order_index: 10 },
+    { category: 'Due Diligence', milestone: 'DD report sent to client', responsible: "Your firm", progress_value: 32, order_index: 11 },
+    { category: 'Due Diligence', milestone: 'Client sign-off on DD findings', responsible: "Client", progress_value: 35, order_index: 12 },
+    { category: 'Documentation', milestone: 'SPA received from seller\'s solicitors', responsible: "Seller's solicitors", progress_value: 38, order_index: 13 },
+    { category: 'Documentation', milestone: 'SPA reviewed and marked up', responsible: "Your firm", progress_value: 42, order_index: 14 },
+    { category: 'Documentation', milestone: 'SPA negotiation concluded', responsible: "All parties", progress_value: 48, order_index: 15 },
+    { category: 'Documentation', milestone: 'Client approves final SPA', responsible: "Client", progress_value: 52, order_index: 16 },
+    { category: 'Documentation', milestone: 'SPA agreed by all parties', responsible: "All parties", progress_value: 55, order_index: 17 },
+    { category: 'Documentation', milestone: 'Disclosure letter received and reviewed', responsible: "Seller's solicitors", progress_value: 60, order_index: 18 },
+    { category: 'Documentation', milestone: 'Client approves disclosure position', responsible: "Client", progress_value: 65, order_index: 19 },
+    { category: 'Documentation', milestone: 'Tax covenant reviewed and agreed', responsible: "Your firm", progress_value: 68, order_index: 20 },
+    { category: 'Pre-Completion', milestone: 'All ancillaries agreed', responsible: "All parties", progress_value: 72, order_index: 21 },
+    { category: 'Pre-Completion', milestone: 'Buyer board minutes drafted and approved', responsible: "Your firm", progress_value: 75, order_index: 22 },
+    { category: 'Pre-Completion', milestone: 'Conditions precedent satisfied', responsible: "All parties", progress_value: 78, order_index: 23 },
+    { category: 'Pre-Completion', milestone: 'Completion statement agreed', responsible: "All parties", progress_value: 80, order_index: 24 },
+    { category: 'Pre-Completion', milestone: 'Funds in place / confirmed', responsible: "Client / bank", progress_value: 83, order_index: 25 },
+    { category: 'Completion', milestone: 'Completion — all documents exchanged', responsible: "All parties", progress_value: 90, order_index: 26 },
+    { category: 'Post-Completion', milestone: 'Stock transfer forms stamped', responsible: "Your firm", progress_value: 92, order_index: 27 },
+    { category: 'Post-Completion', milestone: 'Share certificates obtained', responsible: "Target company", progress_value: 93, order_index: 28 },
+    { category: 'Post-Completion', milestone: 'Stamp duty paid to HMRC', responsible: "Your firm", progress_value: 95, order_index: 29 },
+    { category: 'Post-Completion', milestone: 'Companies House filings submitted (PSC / officers)', responsible: "Your firm", progress_value: 97, order_index: 30 },
+    { category: 'Post-Completion', milestone: 'Statutory books updated', responsible: "Your firm", progress_value: 98, order_index: 31 },
+    { category: 'Post-Completion', milestone: 'Completion file closed and billed', responsible: "Your firm", progress_value: 100, order_index: 32 },
+  ],
+  Seller: [
+    { category: 'AML & Onboarding', milestone: 'AML checks completed', responsible: "Your firm", progress_value: 3, order_index: 1 },
+    { category: 'AML & Onboarding', milestone: 'Source of funds / proceeds advice given', responsible: "Your firm", progress_value: 5, order_index: 2 },
+    { category: 'Heads of Terms', milestone: 'HoTs reviewed / drafted', responsible: "Your firm", progress_value: 7, order_index: 3 },
+    { category: 'Heads of Terms', milestone: 'HoTs signed by all parties', responsible: "All parties", progress_value: 10, order_index: 4 },
+    { category: 'Due Diligence', milestone: 'NDA / Confidentiality agreement signed', responsible: "All parties", progress_value: 12, order_index: 5 },
+    { category: 'Due Diligence', milestone: 'DD questionnaire received from buyer', responsible: "Buyer's solicitors", progress_value: 15, order_index: 6 },
+    { category: 'Due Diligence', milestone: 'DD responses prepared with client', responsible: "Your firm", progress_value: 20, order_index: 7 },
+    { category: 'Due Diligence', milestone: 'DD bundle sent to buyer', responsible: "Your firm", progress_value: 25, order_index: 8 },
+    { category: 'Due Diligence', milestone: 'DD follow-up queries responded to', responsible: "Your firm", progress_value: 30, order_index: 9 },
+    { category: 'Documentation', milestone: 'SPA drafted and sent to buyer\'s solicitors', responsible: "Your firm", progress_value: 38, order_index: 10 },
+    { category: 'Documentation', milestone: 'SPA negotiation concluded', responsible: "All parties", progress_value: 45, order_index: 11 },
+    { category: 'Documentation', milestone: 'Client approves final SPA', responsible: "Client", progress_value: 50, order_index: 12 },
+    { category: 'Documentation', milestone: 'SPA agreed by all parties', responsible: "All parties", progress_value: 55, order_index: 13 },
+    { category: 'Documentation', milestone: 'Disclosure letter drafted', responsible: "Your firm", progress_value: 58, order_index: 14 },
+    { category: 'Documentation', milestone: 'Disclosure letter approved by client', responsible: "Client", progress_value: 62, order_index: 15 },
+    { category: 'Documentation', milestone: 'Disclosure letter sent and approved by buyer', responsible: "Buyer's solicitors", progress_value: 65, order_index: 16 },
+    { category: 'Documentation', milestone: 'Tax covenant reviewed and agreed', responsible: "Your firm", progress_value: 68, order_index: 17 },
+    { category: 'Pre-Completion', milestone: 'All ancillaries agreed', responsible: "All parties", progress_value: 72, order_index: 18 },
+    { category: 'Pre-Completion', milestone: 'Seller board minutes drafted and approved', responsible: "Your firm", progress_value: 75, order_index: 19 },
+    { category: 'Pre-Completion', milestone: 'Target board minutes drafted', responsible: "Your firm", progress_value: 77, order_index: 20 },
+    { category: 'Pre-Completion', milestone: 'Conditions precedent satisfied', responsible: "All parties", progress_value: 80, order_index: 21 },
+    { category: 'Pre-Completion', milestone: 'Completion statement agreed', responsible: "All parties", progress_value: 83, order_index: 22 },
+    { category: 'Completion', milestone: 'Completion — all documents exchanged', responsible: "All parties", progress_value: 90, order_index: 23 },
+    { category: 'Post-Completion', milestone: 'Stock transfer forms delivered to buyer', responsible: "Your firm", progress_value: 92, order_index: 24 },
+    { category: 'Post-Completion', milestone: 'Original share certificates delivered', responsible: "Your firm", progress_value: 93, order_index: 25 },
+    { category: 'Post-Completion', milestone: 'Resignation letters delivered', responsible: "Your firm", progress_value: 95, order_index: 26 },
+    { category: 'Post-Completion', milestone: 'Companies House filings submitted', responsible: "Your firm", progress_value: 97, order_index: 27 },
+    { category: 'Post-Completion', milestone: 'Completion file closed and billed', responsible: "Your firm", progress_value: 100, order_index: 28 },
+  ]
+};
+
+const CRITICAL_DATES_TEMPLATE = [
+  'HoTs Signed', 'Exclusivity Expiry', 'DD Bundle Received', 'DD Report Signed Off',
+  'SPA Agreed', 'Disclosure Letter Approved', 'All Ancillaries Agreed', 'Completion',
+  'Companies House Deadline', 'SDLT Deadline', 'Stamp Duty Deadline'
+];
+
+// Document type → checklist milestone mapping
+const DOC_CHECKLIST_MAP = {
+  'Share Purchase Agreement': ['SPA received from seller\'s solicitors', 'SPA drafted and sent to buyer\'s solicitors', 'SPA agreed by all parties'],
+  'Disclosure Letter': ['Disclosure letter received and reviewed', 'Disclosure letter drafted', 'Disclosure letter approved by client', 'Disclosure letter sent and approved by buyer'],
+  'Tax Covenant': ['Tax covenant reviewed and agreed'],
+  'Board Minutes — Buyer': ['Buyer board minutes drafted and approved'],
+  'Board Minutes — Target': ['Target board minutes drafted'],
+  'Board Minutes — Seller': ['Seller board minutes drafted and approved'],
+  'Heads of Terms': ['HoTs reviewed / drafted', 'HoTs signed by all parties'],
+  'NDA / Confidentiality Agreement': ['NDA / Confidentiality agreement signed'],
+  'Exclusivity Agreement': ['HoTs signed by all parties'],
+  'Due Diligence Report': ['DD report drafted', 'DD report sent to client'],
+  'Stock Transfer Form': ['Stock transfer forms stamped', 'Stock transfer forms delivered to buyer'],
+  'Share Certificate': ['Share certificates obtained', 'Original share certificates delivered'],
+  'Resignation Letter': ['Resignation letters delivered'],
+  'Completion Statement': ['Completion statement agreed'],
+  'SDLT Return': ['Stamp duty paid to HMRC', 'SDLT Deadline'],
+  'Companies House Form': ['Companies House filings submitted (PSC / officers)', 'Companies House filings submitted'],
+};
+
+async function renderChecklist(id, el) {
+  const items = await getItems(id) || [];
+  const cats = ['AML & Onboarding', 'Heads of Terms', 'Due Diligence', 'Documentation', 'Pre-Completion', 'Completion', 'Post-Completion'];
+  const done = items.filter(i => i.completed).length;
+  const pct = items.length ? Math.round(done / items.length * 100) : 0;
+
+  let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+    <span style="font-size:12px;color:var(--text3)">${done}/${items.length} items · ${pct}% complete</span>
+    <div style="display:flex;gap:8px">
+      ${!items.length ? `<button class="btn sm primary" onclick="loadTemplate('${id}')">Load Template</button>` : ''}
+      <button class="btn sm" onclick="openAddClItem('${id}')">+ Add Item</button>
+    </div>
+  </div>`;
+
+  cats.forEach(cat => {
+    const its = items.filter(i => i.category === cat);
+    if (!its.length) return;
+    html += `<div class="card-sm" style="margin-bottom:0.75rem">
+      <div class="cl-cat-header">${cat} <span style="color:var(--text3);font-weight:400">${its.filter(i => i.completed).length}/${its.length}</span></div>
+      ${its.map(it => `<div class="cl-item">
+        <input type="checkbox" class="cl-check" ${it.completed ? 'checked' : ''} onchange="toggleClItem('${it.id}','${id}',this.checked)">
+        <div style="flex:1">
+          <div class="cl-name ${it.completed ? 'done' : ''}">${it.milestone}</div>
+          <div class="cl-meta">${it.responsible ? it.responsible : ''}${it.due_date ? ` · Due: ${fmtDate(it.due_date)}` : ''}${it.progress_value ? ` · ${it.progress_value}%` : ''}${it.notes ? ` · ${it.notes}` : ''}</div>
+        </div>
+        <button class="btn xs danger" onclick="removeClItem('${it.id}','${id}')">×</button>
+      </div>`).join('')}
+    </div>`;
+  });
+
+  if (!items.length) html += `<div class="empty"><div class="empty-icon">✓</div><p>No checklist items yet. Load a template or add items manually.</p></div>`;
+  el.innerHTML = html;
+}
+
+async function loadTemplate(dealId) {
+  const dealArr = await getDeal(dealId);
+  if (!dealArr || !dealArr.length) return;
+  const d = dealArr[0];
+  const role = d.client_role;
+  const tpl = CHECKLIST_TEMPLATES[role] || CHECKLIST_TEMPLATES.Buyer;
+
+  for (const item of tpl) {
+    await insertItem({ deal_id: dealId, ...item, completed: false });
+  }
+
+  // Also load critical dates template
+  const existingDates = await getCritDates(dealId);
+  if (!existingDates || !existingDates.length) {
+    for (const m of CRITICAL_DATES_TEMPLATE) {
+      await insertCritDate({ deal_id: dealId, milestone: m, status: 'Pending' });
+    }
+  }
+
+  await insertLog({ deal_id: dealId, action: `Checklist loaded`, detail: `${role} checklist template applied (${tpl.length} items)`, triggered_by: CFG.userName || 'User' });
+  notify('Template loaded successfully', 'success');
+  await renderDealTab(dealId, 'checklist');
+}
+
+async function toggleClItem(itemId, dealId, checked) {
+  const now = checked ? new Date().toISOString() : null;
+  await updateItem(itemId, { completed: checked, completed_at: now });
+
+  // Recalculate progress
+  const items = await getItems(dealId) || [];
+  const done = items.filter(i => i.completed);
+  const maxProg = done.length ? Math.max(...done.map(i => i.progress_value || 0)) : 0;
+  await updateDeal(dealId, { progress: maxProg });
+
+  // Log it
+  const item = items.find(i => i.id === itemId);
+  if (item) {
+    await insertLog({ deal_id: dealId, action: checked ? 'Item completed' : 'Item unchecked', detail: item.milestone, triggered_by: CFG.userName || 'User' });
+  }
+  deals = await getDeals() || [];
+}
+
+function openAddClItem(dealId) {
+  document.getElementById('modal-cl-item').dataset.dealId = dealId;
+  ['ci-name', 'ci-resp', 'ci-due', 'ci-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('ci-prog').value = '0';
+  document.getElementById('modal-cl-item').classList.add('open');
+}
+
+async function saveClItem() {
+  const name = document.getElementById('ci-name').value.trim();
+  if (!name) return;
+  const dealId = document.getElementById('modal-cl-item').dataset.dealId;
+  await insertItem({
+    deal_id: dealId, milestone: name,
+    category: document.getElementById('ci-cat').value,
+    responsible: document.getElementById('ci-resp').value.trim(),
+    due_date: document.getElementById('ci-due').value || null,
+    progress_value: parseInt(document.getElementById('ci-prog').value),
+    notes: document.getElementById('ci-notes').value.trim(),
+    completed: false, order_index: 999
+  });
+  await insertLog({ deal_id: dealId, action: 'Checklist item added', detail: name, triggered_by: CFG.userName || 'User' });
+  closeModal('modal-cl-item');
+  notify('Item added', 'success');
+  await renderDealTab(dealId, 'checklist');
+}
+
+async function removeClItem(itemId, dealId) {
+  await deleteItem(itemId);
+  await renderDealTab(dealId, 'checklist');
+}
+
+// ═══════════════════════════════════════════
+// DOCUMENTS
+// ═══════════════════════════════════════════
+async function renderDocuments(id, el) {
+  const docs = await getDocs(id) || [];
+  const statusColors = { 'Draft': 'gray', 'Under Review': 'amber', 'Agreed': 'blue', 'Execution Copy': 'amber', 'Signed': 'green', 'Filed': 'green' };
+
+  el.innerHTML = `
+    <div style="display:flex;justify-content:flex-end;margin-bottom:0.75rem">
+      <button class="btn sm primary" onclick="openAddDoc('${id}')">+ Log Document</button>
+    </div>
+    <div class="card-sm">
+      ${!docs.length ? '<div class="empty"><div class="empty-icon">📄</div><p>No documents logged yet.</p></div>' :
+      `<table class="tbl"><thead><tr><th>Document</th><th>Type</th><th>Version</th><th>Status</th><th>Responsible</th><th>Logged</th><th></th></tr></thead>
+      <tbody>${docs.map(d => `<tr>
+        <td style="color:var(--text);font-weight:500">${d.doc_name}</td>
+        <td>${d.doc_type || '—'}</td>
+        <td style="font-family:var(--font-mono);font-size:12px">${d.version || '—'}</td>
+        <td><select class="status-select" onchange="updateDocStatus('${d.id}','${id}',this.value)">
+          ${['Draft','Under Review','Agreed','Execution Copy','Signed','Filed'].map(s => `<option ${d.status===s?'selected':''}>${s}</option>`).join('')}
+        </select></td>
+        <td>${d.responsible_party || '—'}</td>
+        <td style="font-size:11px;color:var(--text3)">${fmtTS(d.created_at)}</td>
+        <td><button class="btn xs danger" onclick="removeDoc('${d.id}','${id}')">×</button></td>
+      </tr>`).join('')}</tbody></table>`}
+    </div>`;
+}
+
+function openAddDoc(dealId) {
+  document.getElementById('modal-doc').dataset.dealId = dealId;
+  ['doc-name', 'doc-ver', 'doc-party', 'doc-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('doc-type').value = 'Share Purchase Agreement';
+  document.getElementById('doc-status').value = 'Draft';
+  document.getElementById('doc-cl-match').style.display = 'none';
+
+  // Show checklist match hint on type change
+  document.getElementById('doc-type').onchange = function () {
+    const matches = DOC_CHECKLIST_MAP[this.value] || [];
+    const hint = document.getElementById('doc-cl-match');
+    if (matches.length) {
+      hint.style.display = 'block';
+      hint.textContent = `Will auto-tick: ${matches.join(', ')}`;
+    } else {
+      hint.style.display = 'none';
+    }
+  };
+  document.getElementById('modal-doc').classList.add('open');
+}
+
+async function saveDoc() {
+  const name = document.getElementById('doc-name').value.trim();
+  if (!name) return;
+  const dealId = document.getElementById('modal-doc').dataset.dealId;
+  const docType = document.getElementById('doc-type').value;
+  const status = document.getElementById('doc-status').value;
+
+  await insertDoc({
+    deal_id: dealId, doc_name: name, doc_type: docType,
+    version: document.getElementById('doc-ver').value.trim(),
+    status, responsible_party: document.getElementById('doc-party').value.trim(),
+    notes: document.getElementById('doc-notes').value.trim()
+  });
+
+  // Auto-tick matching checklist items
+  const matches = DOC_CHECKLIST_MAP[docType] || [];
+  if (matches.length && ['Agreed', 'Execution Copy', 'Signed', 'Filed'].includes(status)) {
+    const items = await getItems(dealId) || [];
+    let ticked = 0;
+    for (const item of items) {
+      if (!item.completed && matches.some(m => item.milestone.toLowerCase().includes(m.toLowerCase().substring(0, 20)))) {
+        await updateItem(item.id, { completed: true, completed_at: new Date().toISOString() });
+        ticked++;
+      }
+    }
+    if (ticked > 0) {
+      // Recalculate progress
+      const updatedItems = await getItems(dealId) || [];
+      const done = updatedItems.filter(i => i.completed);
+      const maxProg = done.length ? Math.max(...done.map(i => i.progress_value || 0)) : 0;
+      await updateDeal(dealId, { progress: maxProg });
+      notify(`Document logged · ${ticked} checklist item${ticked > 1 ? 's' : ''} auto-ticked`, 'success');
+    } else {
+      notify('Document logged', 'success');
+    }
+  } else {
+    notify('Document logged', 'success');
+  }
+
+  await insertLog({ deal_id: dealId, action: 'Document logged', detail: `${name} (${docType}) — ${status}`, triggered_by: CFG.userName || 'User' });
+  deals = await getDeals() || [];
+  closeModal('modal-doc');
+  await renderDealTab(dealId, 'documents');
+}
+
+async function updateDocStatus(docId, dealId, status) {
+  await updateDoc(docId, { status });
+  notify('Status updated', 'success');
+}
+
+async function removeDoc(docId, dealId) {
+  await deleteDoc(docId);
+  await renderDealTab(dealId, 'documents');
+}
+
+// ═══════════════════════════════════════════
+// SIGNATURES
+// ═══════════════════════════════════════════
+async function renderSignatures(id, el) {
+  const sigs = await getSigs(id) || [];
+  const signed = sigs.filter(s => s.status === 'Signed').length;
+  const pending = sigs.filter(s => s.status === 'Sent / Pending').length;
+  const notSent = sigs.filter(s => s.status === 'Not Sent').length;
+
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
+      <div style="display:flex;gap:16px">
+        <span style="font-size:12px;color:var(--green)">● ${signed} Signed</span>
+        <span style="font-size:12px;color:var(--amber)">● ${pending} Pending</span>
+        <span style="font-size:12px;color:var(--text3)">● ${notSent} Not Sent</span>
+      </div>
+      <button class="btn sm primary" onclick="openAddSig('${id}')">+ Add Signatory</button>
+    </div>
+    <div class="card-sm">
+      ${!sigs.length ? '<div class="empty"><div class="empty-icon">✍️</div><p>No signatories added yet.</p></div>' :
+      `<table class="tbl"><thead><tr><th>Document</th><th>Signatory</th><th>Party</th><th>Type</th><th>Status</th><th></th></tr></thead>
+      <tbody>${sigs.map(s => `<tr>
+        <td style="color:var(--text)">${s.document_name}</td>
+        <td>${s.signatory_name}</td>
+        <td style="color:var(--text2)">${s.party || '—'}</td>
+        <td><span class="badge gray">${s.sig_type}</span></td>
+        <td><select class="status-select" onchange="updateSigStatus('${s.id}','${id}',this.value)">
+          ${['Not Sent','Sent / Pending','Signed'].map(o => `<option ${s.status===o?'selected':''}>${o}</option>`).join('')}
+        </select></td>
+        <td><button class="btn xs danger" onclick="removeSig('${s.id}','${id}')">×</button></td>
+      </tr>`).join('')}</tbody></table>`}
+    </div>`;
+}
+
+function openAddSig(dealId) {
+  document.getElementById('modal-sig').dataset.dealId = dealId;
+  ['sig-doc', 'sig-name', 'sig-party', 'sig-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('sig-type').value = 'Wet Ink';
+  document.getElementById('sig-status-sel').value = 'Not Sent';
+  document.getElementById('modal-sig').classList.add('open');
+}
+
+async function saveSig() {
+  const doc = document.getElementById('sig-doc').value.trim();
+  const name = document.getElementById('sig-name').value.trim();
+  if (!doc || !name) return;
+  const dealId = document.getElementById('modal-sig').dataset.dealId;
+  await insertSig({
+    deal_id: dealId, document_name: doc, signatory_name: name,
+    party: document.getElementById('sig-party').value.trim(),
+    sig_type: document.getElementById('sig-type').value,
+    status: document.getElementById('sig-status-sel').value,
+    notes: document.getElementById('sig-notes').value.trim()
+  });
+  await insertLog({ deal_id: dealId, action: 'Signatory added', detail: `${name} — ${doc}`, triggered_by: CFG.userName || 'User' });
+  closeModal('modal-sig');
+  notify('Signatory added', 'success');
+  await renderDealTab(dealId, 'signatures');
+}
+
+async function updateSigStatus(sigId, dealId, status) {
+  await updateSig(sigId, { status });
+  await insertLog({ deal_id: dealId, action: `Signature status updated`, detail: `Status: ${status}`, triggered_by: CFG.userName || 'User' });
+  notify('Status updated', 'success');
+}
+
+async function removeSig(sigId, dealId) {
+  await deleteSig(sigId);
+  await renderDealTab(dealId, 'signatures');
+}
+
+// ═══════════════════════════════════════════
+// PARTIES
+// ═══════════════════════════════════════════
+async function renderParties(id, el) {
+  const parties = await getParties(id) || [];
+  el.innerHTML = `
+    <div style="display:flex;justify-content:flex-end;margin-bottom:0.75rem">
+      <button class="btn sm primary" onclick="openAddParty('${id}')">+ Add Party</button>
+    </div>
+    <div class="card-sm">
+      ${!parties.length ? '<div class="empty"><div class="empty-icon">👥</div><p>No parties added yet.</p></div>' :
+      `<table class="tbl"><thead><tr><th>Name</th><th>Role</th><th>Firm</th><th>Email</th><th>Phone</th><th></th></tr></thead>
+      <tbody>${parties.map(p => `<tr>
+        <td style="color:var(--text);font-weight:500">${p.name}</td>
+        <td><span class="badge gray">${p.role}</span></td>
+        <td>${p.firm || '—'}</td>
+        <td style="font-size:12px">${p.email ? `<a href="mailto:${p.email}" style="color:var(--gold);text-decoration:none">${p.email}</a>` : '—'}</td>
+        <td style="font-size:12px">${p.phone || '—'}</td>
+        <td><button class="btn xs danger" onclick="removeParty('${p.id}','${id}')">×</button></td>
+      </tr>`).join('')}</tbody></table>`}
+    </div>`;
+}
+
+function openAddParty(dealId) {
+  document.getElementById('modal-party').dataset.dealId = dealId;
+  ['p-name', 'p-firm', 'p-email', 'p-phone', 'p-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('p-role').value = 'Director (Buyer)';
+  document.getElementById('modal-party').classList.add('open');
+}
+
+async function saveParty() {
+  const name = document.getElementById('p-name').value.trim();
+  if (!name) return;
+  const dealId = document.getElementById('modal-party').dataset.dealId;
+  await insertParty({
+    deal_id: dealId, name,
+    role: document.getElementById('p-role').value,
+    firm: document.getElementById('p-firm').value.trim(),
+    email: document.getElementById('p-email').value.trim(),
+    phone: document.getElementById('p-phone').value.trim(),
+    notes: document.getElementById('p-notes').value.trim()
+  });
+  closeModal('modal-party');
+  notify('Party added', 'success');
+  await renderDealTab(dealId, 'parties');
+}
+
+async function removeParty(partyId, dealId) {
+  await deleteParty(partyId);
+  await renderDealTab(dealId, 'parties');
+}
+
+// ═══════════════════════════════════════════
+// CRITICAL DATES
+// ═══════════════════════════════════════════
+async function renderCritDates(id, el) {
+  const dates = await getCritDates(id) || [];
+  const today = new Date().toISOString().split('T')[0];
+
+  el.innerHTML = `
+    <div style="display:flex;justify-content:flex-end;margin-bottom:0.75rem">
+      <button class="btn sm primary" onclick="openAddCritDate('${id}')">+ Add Date</button>
+    </div>
+    <div class="card-sm">
+      <div class="cd-row" style="padding-bottom:6px;margin-bottom:4px">
+        <span style="font-size:11px;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase">Milestone</span>
+        <span style="font-size:11px;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase">Expected</span>
+        <span style="font-size:11px;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase">Actual</span>
+        <span style="font-size:11px;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase">Status</span>
+      </div>
+      ${!dates.length ? '<div class="empty"><div class="empty-icon">📅</div><p>No critical dates added yet.</p></div>' :
+      dates.map(d => {
+        const overdue = d.expected_date && d.expected_date < today && d.status !== 'Done';
+        return `<div class="cd-row">
+          <span class="cd-label">${d.milestone}</span>
+          <span class="cd-date ${overdue ? 'overdue' : ''} ${!d.expected_date ? 'empty' : ''}">${fmtDate(d.expected_date) || '—'}</span>
+          <span class="cd-date ${!d.actual_date ? 'empty' : ''}">${fmtDate(d.actual_date) || '—'}</span>
+          <div style="display:flex;gap:4px;align-items:center">
+            <select class="status-select" onchange="updateCritDateStatus('${d.id}','${id}',this.value)">
+              ${['Pending','Done','Overdue','Extended'].map(s => `<option ${d.status===s?'selected':''}>${s}</option>`).join('')}
+            </select>
+            <button class="btn xs danger" onclick="removeCritDate('${d.id}','${id}')">×</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function openAddCritDate(dealId) {
+  document.getElementById('modal-cd').dataset.dealId = dealId;
+  document.getElementById('cd-exp').value = '';
+  document.getElementById('cd-act').value = '';
+  document.getElementById('modal-cd').classList.add('open');
+}
+
+async function saveCritDate() {
+  const dealId = document.getElementById('modal-cd').dataset.dealId;
+  await insertCritDate({
+    deal_id: dealId,
+    milestone: document.getElementById('cd-milestone').value,
+    expected_date: document.getElementById('cd-exp').value || null,
+    actual_date: document.getElementById('cd-act').value || null,
+    status: 'Pending'
+  });
+  closeModal('modal-cd');
+  notify('Date added', 'success');
+  await renderDealTab(dealId, 'dates');
+}
+
+async function updateCritDateStatus(dateId, dealId, status) {
+  await updateCritDate(dateId, { status });
+}
+
+async function removeCritDate(dateId, dealId) {
+  await deleteCritDate(dateId);
+  await renderDealTab(dealId, 'dates');
+}
+
+// ═══════════════════════════════════════════
+// ACTIVITY LOG
+// ═══════════════════════════════════════════
+async function renderLog(id, el) {
+  const logs = await getLogs(id) || [];
+  el.innerHTML = `
+    <div class="card-sm">
+      ${!logs.length ? '<div class="empty"><div class="empty-icon">📋</div><p>No activity recorded yet.</p></div>' :
+      logs.map(l => `<div class="act-item">
+        <div class="act-dot"></div>
+        <div style="flex:1">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <span class="act-text"><strong style="color:var(--text)">${l.action}</strong>${l.detail ? ` — ${l.detail}` : ''}</span>
+            <span class="act-time">${fmtTS(l.created_at)}</span>
+          </div>
+          ${l.triggered_by ? `<span style="font-size:11px;color:var(--text3)">${l.triggered_by}</span>` : ''}
+        </div>
+      </div>`).join('')}
+    </div>`;
+}
+
+// ═══════════════════════════════════════════
+// POST-COMPLETION
+// ═══════════════════════════════════════════
+async function renderPostComplete() {
+  const allDeals = await getDeals() || [];
+  const active = allDeals.filter(d => !['Completed', 'Aborted'].includes(d.status));
+  const el = document.getElementById('postcomplete-content');
+
+  if (!active.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">✅</div><p>No active matters.</p></div>'; return; }
+
+  let html = '';
+  for (const d of active) {
+    const items = await getItems(d.id) || [];
+    const postItems = items.filter(i => i.category === 'Post-Completion');
+    const pendingPost = postItems.filter(i => !i.completed);
+    if (!pendingPost.length) continue;
+
+    html += `<div class="card" style="margin-bottom:1rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
+        <div>
+          <span style="font-size:14px;font-weight:500;color:var(--text)">${d.deal_name}</span>
+          <span style="margin-left:8px">${roleBadge(d.client_role)}</span>
+        </div>
+        <span class="badge ${pendingPost.length > 0 ? 'amber' : 'green'}">${pendingPost.length} pending</span>
+      </div>
+      ${pendingPost.map(it => `<div class="cl-item">
+        <input type="checkbox" class="cl-check" onchange="toggleClItem('${it.id}','${d.id}',this.checked);renderPostComplete()">
+        <div class="cl-name">${it.milestone}</div>
+      </div>`).join('')}
+    </div>`;
+  }
+
+  el.innerHTML = html || '<div class="empty"><div class="empty-icon">✅</div><p>All post-completion items done across all matters.</p></div>';
+}
+
+// ═══════════════════════════════════════════
+// NEW / EDIT DEAL
+// ═══════════════════════════════════════════
+function openNewDeal() {
+  editingDealId = null;
+  document.getElementById('modal-deal-h').textContent = 'New Deal';
+  ['f-ref', 'f-name', 'f-client', 'f-counter', 'f-cpsols', 'f-target', 'f-value', 'f-next', 'f-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-type').value = 'Share Purchase Agreement';
+  document.getElementById('f-role').value = 'Buyer';
+  document.getElementById('f-priority').value = 'Medium';
+  document.getElementById('f-rag').value = 'Green';
+  document.getElementById('f-status').value = 'Active';
+  document.getElementById('f-date').value = '';
+  document.getElementById('modal-deal').classList.add('open');
+}
+
+async function editDeal(id) {
+  const dealArr = await getDeal(id);
+  if (!dealArr || !dealArr.length) return;
+  const d = dealArr[0];
+  editingDealId = id;
+  document.getElementById('modal-deal-h').textContent = 'Edit Deal';
+  document.getElementById('f-ref').value = d.matter_ref || '';
+  document.getElementById('f-name').value = d.deal_name || '';
+  document.getElementById('f-type').value = d.transaction_type || 'Share Purchase Agreement';
+  document.getElementById('f-role').value = d.client_role || 'Buyer';
+  document.getElementById('f-client').value = d.client_name || '';
+  document.getElementById('f-counter').value = d.counterparty || '';
+  document.getElementById('f-cpsols').value = d.counterparty_solicitors || '';
+  document.getElementById('f-target').value = d.target_company || '';
+  document.getElementById('f-value').value = d.deal_value || '';
+  document.getElementById('f-date').value = d.target_completion || '';
+  document.getElementById('f-priority').value = d.priority || 'Medium';
+  document.getElementById('f-rag').value = d.rag_status || 'Green';
+  document.getElementById('f-status').value = d.status || 'Active';
+  document.getElementById('f-next').value = d.next_action || '';
+  document.getElementById('f-notes').value = d.notes || '';
+  document.getElementById('modal-deal').classList.add('open');
+}
+
+async function saveDeal() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { notify('Deal name is required', 'error'); return; }
+  const data = {
+    matter_ref: document.getElementById('f-ref').value.trim(),
+    deal_name: name,
+    transaction_type: document.getElementById('f-type').value,
+    client_role: document.getElementById('f-role').value,
+    client_name: document.getElementById('f-client').value.trim(),
+    counterparty: document.getElementById('f-counter').value.trim(),
+    counterparty_solicitors: document.getElementById('f-cpsols').value.trim(),
+    target_company: document.getElementById('f-target').value.trim(),
+    deal_value: parseFloat(document.getElementById('f-value').value) || null,
+    target_completion: document.getElementById('f-date').value || null,
+    priority: document.getElementById('f-priority').value,
+    rag_status: document.getElementById('f-rag').value,
+    status: document.getElementById('f-status').value,
+    next_action: document.getElementById('f-next').value.trim(),
+    notes: document.getElementById('f-notes').value.trim()
+  };
+
+  if (editingDealId) {
+    await updateDeal(editingDealId, data);
+    await insertLog({ deal_id: editingDealId, action: 'Deal updated', detail: name, triggered_by: CFG.userName || 'User' });
+    notify('Deal updated', 'success');
+  } else {
+    const res = await insertDeal(data);
+    if (res && res.length) {
+      await insertLog({ deal_id: res[0].id, action: 'Deal created', detail: name, triggered_by: CFG.userName || 'User' });
+    }
+    notify('Deal created', 'success');
+  }
+
+  deals = await getDeals() || [];
+  closeModal('modal-deal');
+  renderDashboard();
+}
+
+async function confirmDeleteDeal(id) {
+  if (!confirm('Delete this deal and all associated data? This cannot be undone.')) return;
+  await deleteDeal(id);
+  deals = await getDeals() || [];
+  notify('Deal deleted', 'success');
+  renderDashboard();
+}
+
+// ═══════════════════════════════════════════
+// CLOSING BOOK
+// ═══════════════════════════════════════════
+async function openClosingBook(id) {
+  const dealArr = await getDeal(id);
+  if (!dealArr || !dealArr.length) return;
+  const d = dealArr[0];
+  const items = await getItems(id) || [];
+  const docs = await getDocs(id) || [];
+  const sigs = await getSigs(id) || [];
+  const parties = await getParties(id) || [];
+  const dates = await getCritDates(id) || [];
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Closing Book — ${d.deal_name}</title>
+<style>
+body{font-family:'Georgia',serif;max-width:900px;margin:0 auto;padding:3rem 2rem;color:#1a1a1a;font-size:14px;line-height:1.6}
+h1{font-size:28px;font-weight:400;margin-bottom:4px;color:#1a1a1a}
+h2{font-size:16px;font-weight:600;margin:2rem 0 0.75rem;color:#1a1a1a;border-bottom:1px solid #ddd;padding-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;font-size:12px}
+h3{font-size:14px;font-weight:600;margin:1rem 0 0.5rem;color:#444}
+.cover{border-bottom:3px solid #1a1a1a;padding-bottom:2rem;margin-bottom:2rem}
+.cover-sub{font-size:13px;color:#666;margin-top:4px}
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.5rem}
+.meta-item{font-size:13px}
+.meta-item label{color:#888;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;display:block}
+table{width:100%;border-collapse:collapse;margin-bottom:1rem;font-size:13px}
+th{text-align:left;padding:6px 10px;background:#f5f5f5;border:1px solid #e0e0e0;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.04em}
+td{padding:6px 10px;border:1px solid #e0e0e0;vertical-align:top}
+.done{color:#2d7a4a}.pending{color:#888}
+.badge{display:inline-block;padding:1px 8px;border-radius:20px;font-size:11px;background:#f0f0f0;border:1px solid #ddd}
+.footer{margin-top:3rem;padding-top:1rem;border-top:1px solid #ddd;font-size:11px;color:#aaa;text-align:center}
+@media print{body{padding:1rem}.footer{position:fixed;bottom:0;width:100%}}
+</style>
+</head>
+<body>
+<div class="cover">
+  <h1>${d.deal_name}</h1>
+  <div class="cover-sub">Closing Book · Generated ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+</div>
+
+<h2>Deal Summary</h2>
+<div class="meta-grid">
+  <div class="meta-item"><label>Matter Reference</label>${d.matter_ref || '—'}</div>
+  <div class="meta-item"><label>Transaction Type</label>${d.transaction_type || '—'}</div>
+  <div class="meta-item"><label>Client</label>${d.client_name || '—'}</div>
+  <div class="meta-item"><label>Client Role</label>${d.client_role || '—'}</div>
+  <div class="meta-item"><label>Counterparty</label>${d.counterparty || '—'}</div>
+  <div class="meta-item"><label>Counterparty Solicitors</label>${d.counterparty_solicitors || '—'}</div>
+  <div class="meta-item"><label>Target Company</label>${d.target_company || '—'}</div>
+  <div class="meta-item"><label>Deal Value</label>${fmt(d.deal_value) || '—'}</div>
+  <div class="meta-item"><label>Status</label>${d.status || '—'}</div>
+  <div class="meta-item"><label>Progress</label>${d.progress || 0}% complete</div>
+</div>
+
+${parties.length ? `<h2>Parties & Contacts</h2>
+<table><thead><tr><th>Name</th><th>Role</th><th>Firm</th><th>Email</th></tr></thead>
+<tbody>${parties.map(p => `<tr><td>${p.name}</td><td>${p.role}</td><td>${p.firm || '—'}</td><td>${p.email || '—'}</td></tr>`).join('')}</tbody></table>` : ''}
+
+${dates.length ? `<h2>Critical Dates</h2>
+<table><thead><tr><th>Milestone</th><th>Expected</th><th>Actual</th><th>Status</th></tr></thead>
+<tbody>${dates.map(d => `<tr><td>${d.milestone}</td><td>${fmtDate(d.expected_date) || '—'}</td><td>${fmtDate(d.actual_date) || '—'}</td><td>${d.status}</td></tr>`).join('')}</tbody></table>` : ''}
+
+${docs.length ? `<h2>Document Register</h2>
+<table><thead><tr><th>Document</th><th>Type</th><th>Version</th><th>Status</th><th>Responsible</th></tr></thead>
+<tbody>${docs.map(d => `<tr><td>${d.doc_name}</td><td>${d.doc_type || '—'}</td><td>${d.version || '—'}</td><td>${d.status}</td><td>${d.responsible_party || '—'}</td></tr>`).join('')}</tbody></table>` : ''}
+
+${sigs.length ? `<h2>Signature Schedule</h2>
+<table><thead><tr><th>Document</th><th>Signatory</th><th>Party</th><th>Type</th><th>Status</th></tr></thead>
+<tbody>${sigs.map(s => `<tr><td>${s.document_name}</td><td>${s.signatory_name}</td><td>${s.party || '—'}</td><td>${s.sig_type}</td><td class="${s.status === 'Signed' ? 'done' : 'pending'}">${s.status}</td></tr>`).join('')}</tbody></table>` : ''}
+
+<h2>Closing Checklist</h2>
+${['AML & Onboarding','Heads of Terms','Due Diligence','Documentation','Pre-Completion','Completion','Post-Completion'].map(cat => {
+  const its = items.filter(i => i.category === cat);
+  if (!its.length) return '';
+  return `<h3>${cat}</h3>
+  <table><thead><tr><th>Item</th><th>Responsible</th><th>Status</th></tr></thead>
+  <tbody>${its.map(it => `<tr><td>${it.milestone}</td><td>${it.responsible || '—'}</td><td class="${it.completed ? 'done' : 'pending'}">${it.completed ? '✓ Complete' : 'Pending'}</td></tr>`).join('')}</tbody></table>`;
+}).join('')}
+
+<div class="footer">M&A Hub · Confidential · ${d.deal_name} · ${new Date().toLocaleDateString('en-GB')}</div>
+</body></html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+}
+
+// ═══════════════════════════════════════════
+// MODAL CLOSE ON BG CLICK
+// ═══════════════════════════════════════════
+document.querySelectorAll('.modal-bg').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ═══════════════════════════════════════════
+// START
+// ═══════════════════════════════════════════
+init();
+</script>
+</body>
+</html>
