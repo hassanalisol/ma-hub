@@ -14,7 +14,7 @@
   --text:#1A1D23;--text2:#4A5060;--text3:#8A90A0;
   --gold:#2C5282;--gold2:#2B4C87;--gold-bg:rgba(44,82,130,0.07);--gold-border:rgba(44,82,130,0.18);
   --green:#1E7D4E;--green-bg:rgba(30,125,78,0.08);--green-border:rgba(30,125,78,0.22);
-  --amber:#B45309;--amber-bg:rgba(180,83,9,0.08);--amber-border:rgba(180,83,9,0.22);
+  --amber:#D97706;--amber-bg:rgba(217,119,6,0.09);--amber-border:rgba(217,119,6,0.30);
   --red:#C0392B;--red-bg:rgba(192,57,43,0.08);--red-border:rgba(192,57,43,0.22);
   --blue:#1A6FA8;--blue-bg:rgba(26,111,168,0.08);--blue-border:rgba(26,111,168,0.22);
   --purple:#6D3DB5;--purple-bg:rgba(109,61,181,0.08);--purple-border:rgba(109,61,181,0.22);
@@ -896,13 +896,16 @@ async function renderDashboard() {
   const completing = deals.filter(d => d.stage === 'Completing').length;
   const totalValue = deals.reduce((s, d) => s + (parseFloat(d.deal_value) || 0), 0);
   const redDeals = deals.filter(d => d.rag_status === 'Red').length;
+  const amberDeals = deals.filter(d => d.rag_status === 'Amber').length;
+  const highPriority = deals.filter(d => d.priority === 'High').length;
 
   document.getElementById('content').innerHTML = `
-  <div class="stats-grid">
-    <div class="stat-card"><div class="stat-label">Active Deals</div><div class="stat-value stat-gold">${active}</div><div class="stat-sub">Across all stages</div></div>
-    <div class="stat-card"><div class="stat-label">Completing</div><div class="stat-value">${completing}</div><div class="stat-sub">Near completion</div></div>
+  <div class="stats-grid" style="grid-template-columns:repeat(5,1fr)">
+    <div class="stat-card"><div class="stat-label">Active Deals</div><div class="stat-value" style="color:#2C5282">${active}</div><div class="stat-sub">Across all stages</div></div>
+    <div class="stat-card"><div class="stat-label">High Priority</div><div class="stat-value" style="color:#2C5282">${highPriority}</div><div class="stat-sub">Review daily</div></div>
     <div class="stat-card"><div class="stat-label">Total Value</div><div class="stat-value">${formatCurrency(totalValue)}</div><div class="stat-sub">Active portfolio</div></div>
-    <div class="stat-card"><div class="stat-label">Needs Attention</div><div class="stat-value" style="color:var(--red)">${redDeals}</div><div class="stat-sub">RAG red status</div></div>
+    <div class="stat-card"><div class="stat-label">Amber — Monitor</div><div class="stat-value" style="color:var(--amber)">${amberDeals}</div><div class="stat-sub">Keep an eye on</div></div>
+    <div class="stat-card"><div class="stat-label">Red — Act Now</div><div class="stat-value" style="color:var(--red)">${redDeals}</div><div class="stat-sub">Immediate attention</div></div>
   </div>
   <div class="section-header">
     <div class="section-title">Active Deals</div>
@@ -2406,7 +2409,12 @@ function openNewDeal() {
         <select class="form-select" id="f-rag"><option>Green</option><option>Amber</option><option>Red</option></select>
       </div>
     </div>
-    <div class="form-group"><label class="form-label">Next Action</label><input class="form-input" id="f-action" placeholder="What needs to happen next?"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Priority</label>
+        <select class="form-select" id="f-priority"><option>Low</option><option selected>Medium</option><option>High</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Next Action</label><input class="form-input" id="f-action" placeholder="What needs to happen next?"></div>
+    </div>
     <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="f-notes" placeholder="Any additional notes…"></textarea></div>
   </div>
   <div class="modal-footer">
@@ -2433,6 +2441,7 @@ async function submitNewDeal() {
     stage: document.getElementById('f-stage').value,
     rag_status: document.getElementById('f-rag').value,
     next_action: document.getElementById('f-action').value,
+    priority: document.getElementById('f-priority') ? document.getElementById('f-priority').value : 'Medium',
     notes: document.getElementById('f-notes').value,
     progress: 0, status: 'Active'
   };
@@ -2504,7 +2513,12 @@ function openEditDeal(d) {
         <select class="form-select" id="f-rag">${['Green','Amber','Red'].map(r => `<option${d.rag_status===r?' selected':''}>${r}</option>`).join('')}</select>
       </div>
     </div>
-    <div class="form-group"><label class="form-label">Next Action</label><input class="form-input" id="f-action" value="${d.next_action||''}"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Priority</label>
+        <select class="form-select" id="f-priority">${['Low','Medium','High'].map(p => `<option${(d.priority||'Medium')===p?' selected':''}>${p}</option>`).join('')}</select>
+      </div>
+      <div class="form-group"><label class="form-label">Next Action</label><input class="form-input" id="f-action" value="${d.next_action||''}"></div>
+    </div>
     <div class="form-group"><label class="form-label">VDR / Data Room Link</label><input class="form-input" id="f-vdr" type="url" placeholder="https://datasite.com/..." value="${d.vdr_link||''}"></div>
     <div style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin:1rem 0 0.5rem">Buyer Solicitor</div>
     <div class="form-row">
@@ -2542,6 +2556,7 @@ async function submitEditDeal() {
     stage: document.getElementById('f-stage').value,
     rag_status: document.getElementById('f-rag').value,
     next_action: document.getElementById('f-action').value,
+    priority: document.getElementById('f-priority') ? document.getElementById('f-priority').value : (currentDeal.priority || 'Medium'),
     vdr_link: document.getElementById('f-vdr').value || null,
     buyer_sol_name: document.getElementById('f-bsol-name').value || null,
     buyer_sol_email: document.getElementById('f-bsol-email').value || null,
