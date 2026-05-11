@@ -393,6 +393,109 @@ async function loadDocuments(dealId) {
 async function saveDocument(doc) {
   return sbFetch('documents', { method: 'POST', body: JSON.stringify(doc) });
 }
+
+// ── DOCUMENT UPLOAD ──
+async function handleDocUpload(input) {
+  const file = input.files[0];
+  if (!file || !currentDeal) return;
+  input.value = '';
+
+  const progress = document.getElementById('doc-upload-progress');
+  const bar = document.getElementById('doc-upload-bar');
+  const label = document.getElementById('doc-upload-label');
+  progress.style.display = 'block';
+  bar.style.width = '20%';
+  label.textContent = 'Checking existing versions…';
+
+  try {
+    // Auto-detect document type from filename
+    const fname = file.name.toLowerCase();
+    let docType = 'Other';
+    if (fname.includes('spa') || fname.includes('share purchase')) docType = 'SPA';
+    else if (fname.includes('hot') || fname.includes('heads')) docType = 'HOT';
+    else if (fname.includes('disclosure')) docType = 'Disclosure Letter';
+    else if (fname.includes('board') || fname.includes('resolution')) docType = 'Board Resolution';
+    else if (fname.includes('stock transfer') || fname.includes('stf') || fname.includes('j30')) docType = 'Stock Transfer Form';
+    else if (fname.includes('resignation')) docType = 'Resignation Letter';
+    else if (fname.includes('service')) docType = 'Service Agreement';
+    else if (fname.includes('due diligence') || fname.includes('dd report')) docType = 'Due Diligence';
+
+    // Strip extension for display name
+    const displayName = file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+    // Auto-version: count existing docs with same base name
+    const existing = await loadDocuments(currentDeal.id) || [];
+    const matches = existing.filter(d => d.name.toLowerCase() === displayName.toLowerCase());
+    const version = `v${matches.length + 1}`;
+
+    bar.style.width = '50%';
+    label.textContent = `Uploading ${file.name} as ${version}…`;
+
+    // Upload to Supabase Storage
+    const storagePath = `${currentDeal.id}/${Date.now()}_${file.name}`;
+    const uploadUrl = `${config.supabaseUrl}/storage/v1/object/deal-documents/${storagePath}`;
+    const uploadRes = await fetch(uploadUrl, {
+      method: 'POST',
+      headers: {
+        'apikey': config.supabaseKey,
+        'Authorization': `Bearer ${config.supabaseKey}`,
+        'Content-Type': file.type || 'application/octet-stream',
+        'x-upsert': 'false'
+      },
+      body: file
+    });
+
+    if (!uploadRes.ok) {
+      const err = await uploadRes.text();
+      throw new Error('Storage upload failed: ' + err);
+    }
+
+    bar.style.width = '80%';
+    label.textContent = 'Logging document…';
+
+    // Log to documents table
+    await saveDocument({
+      deal_id: currentDeal.id,
+      name: displayName,
+      type: docType,
+      version,
+      status: 'Draft',
+      date: new Date().toISOString().split('T')[0],
+      storage_path: storagePath,
+      file_name: file.name,
+      file_size: file.size
+    });
+
+    bar.style.width = '100%';
+    label.textContent = 'Done!';
+    setTimeout(() => { progress.style.display = 'none'; bar.style.width = '0%'; }, 1500);
+
+    showNotif(`${displayName} uploaded as ${version}`, 'success');
+    switchDealTab('Documents');
+
+  } catch(e) {
+    progress.style.display = 'none';
+    showNotif('Upload failed: ' + e.message, 'error');
+  }
+}
+
+async function downloadStoredDoc(storagePath, name) {
+  try {
+    const url = `${config.supabaseUrl}/storage/v1/object/deal-documents/${storagePath}`;
+    const res = await fetch(url, {
+      headers: { 'apikey': config.supabaseKey, 'Authorization': `Bearer ${config.supabaseKey}` }
+    });
+    if (!res.ok) throw new Error('Download failed');
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  } catch(e) {
+    showNotif('Download failed: ' + e.message, 'error');
+  }
+}
 async function loadParties(dealId) {
   return sbFetch(`parties?deal_id=eq.${dealId}&order=role.asc`);
 }
@@ -687,20 +790,34 @@ async function switchDealTab(tab, el) {
     c.innerHTML = `
     <div class="section-header">
       <div class="section-title" style="font-size:16px">Document Register</div>
-      <button class="btn btn-secondary btn-sm" onclick="openAddDocument()">+ Add Document</button>
+      <div style="display:flex;gap:8px">
+        <label class="btn btn-primary btn-sm" style="cursor:pointer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px;margin-right:5px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Upload Document
+          <input type="file" id="doc-upload-input" style="display:none" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.msg" onchange="handleDocUpload(this)">
+        </label>
+        <button class="btn btn-secondary btn-sm" onclick="openAddDocument()">+ Log Manually</button>
+      </div>
+    </div>
+    <div id="doc-upload-progress" style="display:none;margin-bottom:1rem">
+      <div style="background:var(--surface2);border-radius:6px;overflow:hidden;height:6px">
+        <div id="doc-upload-bar" style="height:100%;background:var(--accent);width:0%;transition:width .3s"></div>
+      </div>
+      <div id="doc-upload-label" style="font-size:12px;color:var(--text3);margin-top:6px">Uploading…</div>
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Document</th><th>Type</th><th>Version</th><th>Status</th><th>Date</th></tr></thead>
+        <thead><tr><th>Document</th><th>Type</th><th>Version</th><th>Status</th><th>Date</th><th></th></tr></thead>
         <tbody>
         ${docs && docs.length ? docs.map(doc => `
           <tr>
-            <td style="color:var(--text)">${doc.name||'—'}</td>
+            <td style="color:var(--text);font-weight:500">${doc.name||'—'}</td>
             <td><span class="badge badge-grey">${doc.type||'—'}</span></td>
-            <td style="font-family:var(--font-mono);font-size:12px">${doc.version||'—'}</td>
-            <td><span class="badge badge-${doc.status==='Final'?'green':doc.status==='Agreed'?'blue':'amber'}">${doc.status||'Draft'}</span></td>
+            <td style="font-family:var(--font-mono);font-size:12px;color:var(--accent)">${doc.version||'—'}</td>
+            <td><span class="badge badge-${doc.status==='Final'||doc.status==='Executed'?'green':doc.status==='Agreed'?'blue':'amber'}">${doc.status||'Draft'}</span></td>
             <td style="color:var(--text3)">${doc.date ? formatDate(doc.date) : '—'}</td>
-          </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:2rem">No documents logged</td></tr>'}
+            <td>${doc.storage_path ? `<button class="btn btn-ghost btn-sm" onclick="downloadStoredDoc('${doc.storage_path}','${doc.name}')">↓</button>` : ''}</td>
+          </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:2rem">No documents yet — upload or log one</td></tr>'}
         </tbody>
       </table>
     </div>`;
@@ -2023,10 +2140,25 @@ async function submitAddChecklistItem() {
 }
 
 function openAddDate() {
+  const milestones = [
+    'HOTs Signed','CA/NDA Signed','Exclusivity Signed','Exclusivity Expiry',
+    'DD Bundle Received','DD Report Signed Off','SPA Agreed','Disclosure Letter Approved',
+    'All Ancillaries Agreed','Completion','Companies House Deadline',
+    'Board Resolutions Signed','Stock Transfer Form Executed','Completion Monies Received',
+    'PSC Filings Due','AP01 / TM01 Filed','Custom…'
+  ];
   openModal(`
   <div class="modal-header"><div class="modal-title">Add Critical Date</div><button class="close-btn" onclick="closeModal()">✕</button></div>
   <div class="modal-body">
-    <div class="form-group"><label class="form-label">Milestone *</label><input class="form-input" id="dt-event" placeholder="e.g. Completion"></div>
+    <div class="form-group"><label class="form-label">Milestone *</label>
+      <select class="form-select" id="dt-milestone-select" onchange="toggleCustomMilestone(this.value)">
+        ${milestones.map(m => `<option value="${m}">${m}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group" id="dt-custom-wrap" style="display:none">
+      <label class="form-label">Custom Milestone</label>
+      <input class="form-input" id="dt-event" placeholder="e.g. Loan Note Redemption">
+    </div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Expected Date</label><input class="form-input" id="dt-date" type="date"></div>
       <div class="form-group"><label class="form-label">Actual Date</label><input class="form-input" id="dt-actual" type="date"></div>
@@ -2041,9 +2173,16 @@ function openAddDate() {
   </div>`);
 }
 
+function toggleCustomMilestone(val) {
+  document.getElementById('dt-custom-wrap').style.display = val === 'Custom…' ? 'block' : 'none';
+}
+
 async function submitAddDate() {
-  const milestone = document.getElementById('dt-event').value.trim();
-  if (!milestone) return;
+  const selected = document.getElementById('dt-milestone-select').value;
+  const milestone = selected === 'Custom…'
+    ? (document.getElementById('dt-event').value.trim())
+    : selected;
+  if (!milestone || milestone === 'Custom…') { showNotif('Please enter a milestone name', 'error'); return; }
   try {
     await sbFetch('critical_dates', { method: 'POST', body: JSON.stringify({
       deal_id: currentDeal.id,
