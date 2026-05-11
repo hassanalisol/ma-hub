@@ -580,7 +580,7 @@ async function deleteParty(id) {
   return sbFetch(`parties?id=eq.${id}`, { method: 'DELETE' });
 }
 async function loadSignatures(dealId) {
-  return sbFetch(`signatures?deal_id=eq.${dealId}&order=created_at.asc`) || [];
+  return sbFetch(`signatures?deal_id=eq.${dealId}&select=id,deal_id,signatory_name,document_name,party,signed,signed_at&order=created_at.asc`) || [];
 }
 async function loadActivityLog(dealId) {
   return sbFetch(`activity_log?deal_id=eq.${dealId}&order=created_at.desc&limit=30`) || [];
