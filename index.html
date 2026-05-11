@@ -215,9 +215,30 @@ tr:hover td{background:var(--bg3)}
 .config-key-display{font-family:var(--font-mono);font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;color:var(--text3);word-break:break-all}
 
 /* DEAL DETAIL */
-.deal-detail-header{margin-bottom:2rem}
+.deal-detail-header{margin-bottom:1.25rem}
 .deal-detail-name{font-family:var(--font-display);font-size:26px;font-weight:500;color:var(--text);margin-bottom:8px}
 .deal-detail-meta{display:flex;gap:1rem;align-items:center;flex-wrap:wrap}
+/* WORKFLOW BAR */
+.workflow-bar{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.5rem}
+.workflow-stages{display:flex;align-items:flex-start;gap:0;margin-bottom:1rem;overflow-x:auto;padding-bottom:4px}
+.workflow-stage{display:flex;flex-direction:column;align-items:center;position:relative;flex:1;min-width:72px;cursor:pointer}
+.workflow-stage-dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--text3);transition:all .2s;position:relative;z-index:2}
+.workflow-stage.done .workflow-stage-dot{background:var(--accent);border-color:var(--accent);color:#1a1a18}
+.workflow-stage.active .workflow-stage-dot{background:var(--surface);border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 3px rgba(201,168,76,0.2)}
+.workflow-stage-label{font-size:9.5px;color:var(--text3);text-align:center;margin-top:6px;line-height:1.3;max-width:72px}
+.workflow-stage.done .workflow-stage-label{color:var(--accent)}
+.workflow-stage.active .workflow-stage-label{color:var(--text);font-weight:600}
+.workflow-connector{flex:1;height:2px;background:var(--border);margin-top:13px;min-width:8px;transition:background .2s;align-self:flex-start}
+.workflow-connector.done{background:var(--accent)}
+.workflow-progress-row{display:flex;align-items:center;gap:1rem;margin-top:.5rem}
+.workflow-progress-bar{flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.workflow-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),#e6c55a);border-radius:3px;transition:width .4s ease}
+.workflow-pct{font-size:13px;font-weight:700;color:var(--accent);min-width:36px;text-align:right}
+.workflow-blockers{margin-top:.875rem;display:flex;flex-wrap:wrap;gap:6px}
+.workflow-blocker{font-size:11px;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);border-radius:6px;padding:3px 9px;color:var(--text2);display:flex;align-items:center;gap:5px}
+.workflow-blocker.clear{background:rgba(74,155,110,0.08);border-color:rgba(74,155,110,0.25);color:var(--text3)}
+.workflow-footer{margin-top:.875rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.workflow-stage-name{font-size:12px;color:var(--text2);font-weight:500}
 
 /* PARTY TABLE */
 .party-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
@@ -525,6 +546,217 @@ async function loadCriticalDates(dealId) {
 }
 
 // ═══════════════════════════════════════════════════════
+// WORKFLOW ENGINE
+// ═══════════════════════════════════════════════════════
+const WORKFLOW_STAGES = [
+  {
+    id: 'pre-instruction', label: 'Pre-Instruction', pct: 0,
+    checklistKeys: ['Conflict check completed','Engagement letter','AML','Source of funds','Confirm client'],
+    blockers: [
+      'Conflict check completed',
+      'Engagement letter / client care letter sent',
+      'AML / KYC checks completed',
+      'Client instructions confirmed'
+    ]
+  },
+  {
+    id: 'hot-nda', label: 'HOTs & NDA', pct: 10,
+    checklistKeys: ['Confidentiality','NDA','Exclusivity','Heads of Terms','HOT'],
+    blockers: [
+      'Confidentiality agreement signed',
+      'Exclusivity agreement signed',
+      'HOT signed by all parties'
+    ]
+  },
+  {
+    id: 'due-diligence', label: 'Due Diligence', pct: 20,
+    checklistKeys: ['Due diligence questionnaire','data room','Legal due diligence','Financial due diligence','due diligence report','DD report'],
+    blockers: [
+      'Due diligence questionnaire sent to Seller',
+      'Due diligence data room access obtained',
+      'Legal due diligence completed',
+      'Due diligence report provided to client'
+    ]
+  },
+  {
+    id: 'spa-drafting', label: 'SPA Drafting', pct: 30,
+    checklistKeys: ['First draft SPA','SPA negotiations','draft SPA'],
+    blockers: [
+      'First draft SPA received / sent',
+      'SPA negotiations completed'
+    ]
+  },
+  {
+    id: 'disclosure', label: 'Disclosure', pct: 50,
+    checklistKeys: ['Disclosure letter','disclosure bundle','SPA approved','SPA executed'],
+    blockers: [
+      'Disclosure letter reviewed and agreed',
+      'SPA approved by Buyer board',
+      'SPA executed by all parties'
+    ]
+  },
+  {
+    id: 'pre-completion-parties', label: 'Pre-Completion', pct: 70,
+    checklistKeys: ['Completion board resolutions','Stock transfer form','Resignation letters','Consents to act','Completion accounts'],
+    blockers: [
+      'Completion board resolutions prepared',
+      'Stock transfer form(s) prepared and executed',
+      'Resignation letters obtained',
+      'Consents to act obtained'
+    ]
+  },
+  {
+    id: 'pre-completion-client', label: 'Funds & Docs', pct: 80,
+    checklistKeys: ['Completion monies','funds','executed documents','Completion statement'],
+    blockers: [
+      'Completion monies paid',
+      'All executed documents received'
+    ]
+  },
+  {
+    id: 'completion', label: 'Completion', pct: 90,
+    checklistKeys: ['Completion meeting','completion held','COMPLETION'],
+    blockers: [
+      'Completion meeting held'
+    ]
+  },
+  {
+    id: 'post-completion', label: 'Post-Completion', pct: 100,
+    checklistKeys: ['Companies House','Stamp duty','Share certificate','Statutory books','Completion bible','File closed'],
+    blockers: [
+      'Companies House filings submitted (TM01, AP01, AD01)',
+      'Completion bible sent to client',
+      'File closed'
+    ]
+  }
+];
+
+function getWorkflowState(checklist) {
+  // For each stage, check what % of its blockers are done in the checklist
+  const stageStates = WORKFLOW_STAGES.map((stage, idx) => {
+    const blockerStates = stage.blockers.map(blocker => {
+      const match = checklist.find(item =>
+        item.milestone && item.milestone.toLowerCase().includes(blocker.toLowerCase().substring(0, 25))
+      );
+      return { label: blocker, done: match ? !!match.completed : false };
+    });
+    const allDone = blockerStates.every(b => b.done);
+    const anyDone = blockerStates.some(b => b.done);
+    return { ...stage, blockerStates, allDone, anyDone };
+  });
+
+  // Active stage = first stage that isn't fully complete
+  let activeIdx = stageStates.findIndex(s => !s.allDone);
+  if (activeIdx === -1) activeIdx = stageStates.length - 1;
+
+  const activePct = WORKFLOW_STAGES[activeIdx].pct;
+  // Interpolate within the active stage
+  const stage = stageStates[activeIdx];
+  const doneFraction = stage.blockerStates.length > 0
+    ? stage.blockerStates.filter(b => b.done).length / stage.blockerStates.length
+    : 0;
+  const nextPct = activeIdx < WORKFLOW_STAGES.length - 1 ? WORKFLOW_STAGES[activeIdx + 1].pct : 100;
+  const pct = Math.round(activePct + doneFraction * (nextPct - activePct));
+
+  return { stageStates, activeIdx, pct };
+}
+
+async function renderWorkflowBar(dealId) {
+  let checklist = [];
+  try { checklist = await loadChecklist(dealId) || []; } catch(e) {}
+  const { stageStates, activeIdx, pct } = getWorkflowState(checklist);
+  const activeStage = stageStates[activeIdx];
+
+  // Build stage dots + connectors
+  let stagesHtml = '';
+  stageStates.forEach((stage, idx) => {
+    const cls = stage.allDone ? 'done' : (idx === activeIdx ? 'active' : '');
+    const icon = stage.allDone ? '✓' : (idx + 1);
+    stagesHtml += `<div class="workflow-stage ${cls}" title="${stage.label}">
+      <div class="workflow-stage-dot">${icon}</div>
+      <div class="workflow-stage-label">${stage.label}</div>
+    </div>`;
+    if (idx < stageStates.length - 1) {
+      stagesHtml += `<div class="workflow-connector ${stage.allDone ? 'done' : ''}"></div>`;
+    }
+  });
+
+  // Blockers for active stage
+  const blockersHtml = activeStage.blockerStates.map(b =>
+    `<span class="workflow-blocker ${b.done ? 'clear' : ''}">
+      ${b.done ? '✓' : '⬤'} ${b.label}
+    </span>`
+  ).join('');
+
+  // Can advance? All blockers done and not last stage
+  const canAdvance = activeStage.allDone && activeIdx < stageStates.length - 1;
+  const isComplete = activeIdx === stageStates.length - 1 && activeStage.allDone;
+
+  return `
+  <div class="workflow-bar">
+    <div class="workflow-stages">${stagesHtml}</div>
+    <div class="workflow-progress-row">
+      <div class="workflow-progress-bar"><div class="workflow-progress-fill" style="width:${pct}%"></div></div>
+      <div class="workflow-pct">${pct}%</div>
+    </div>
+    <div class="workflow-blockers">
+      ${blockersHtml || '<span class="workflow-blocker clear">✓ All tasks complete for this stage</span>'}
+    </div>
+    <div class="workflow-footer">
+      <div class="workflow-stage-name">Current stage: <strong>${activeStage.label}</strong></div>
+      ${isComplete
+        ? '<span class="badge badge-green" style="font-size:12px">✓ Deal Complete</span>'
+        : canAdvance
+          ? `<button class="btn btn-primary btn-sm" onclick="advanceWorkflowStage(${activeIdx})">Advance to ${stageStates[activeIdx+1].label} →</button>`
+          : `<span style="font-size:11px;color:var(--text3)">${activeStage.blockerStates.filter(b=>!b.done).length} task(s) outstanding</span>`
+      }
+    </div>
+  </div>`;
+}
+
+async function advanceWorkflowStage(currentIdx) {
+  // Mark all incomplete blockers in checklist as complete for current stage
+  const stage = WORKFLOW_STAGES[currentIdx];
+  let checklist = [];
+  try { checklist = await loadChecklist(currentDeal.id) || []; } catch(e) {}
+
+  const updates = [];
+  stage.blockers.forEach(blocker => {
+    const match = checklist.find(item =>
+      item.milestone && item.milestone.toLowerCase().includes(blocker.toLowerCase().substring(0, 25))
+    );
+    if (match && !match.completed) updates.push({ ...match, completed: true });
+  });
+
+  try {
+    await Promise.all(updates.map(item => saveChecklistItem(item)));
+
+    // If advancing to Completion stage, auto-add CH deadline to critical dates
+    if (currentIdx === 7) { // Completion stage
+      const completionDate = new Date();
+      const chDeadline = new Date(completionDate);
+      chDeadline.setDate(chDeadline.getDate() + 14);
+      const chDateStr = chDeadline.toISOString().split('T')[0];
+      try {
+        await sbFetch('critical_dates', { method: 'POST', body: JSON.stringify({
+          deal_id: currentDeal.id,
+          milestone: 'Companies House Deadline',
+          expected_date: chDateStr,
+          status: 'Pending'
+        })});
+        showNotif('Companies House deadline (14 days) added to Critical Dates', 'success');
+      } catch(e) {}
+    }
+
+    showNotif('Stage advanced — checklist updated', 'success');
+    // Refresh the overview tab to re-render workflow bar
+    switchDealTab('Overview');
+  } catch(e) {
+    showNotif('Error advancing stage: ' + e.message, 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════════════════════
 function navigate(view, data = null) {
@@ -697,7 +929,8 @@ async function switchDealTab(tab, el) {
   const d = currentDeal;
 
   if (tab === 'Overview') {
-    c.innerHTML = `
+    const workflowHtml = await renderWorkflowBar(d.id);
+    c.innerHTML = workflowHtml + `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
       <div class="card">
         <div style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:1rem">Transaction Details</div>
