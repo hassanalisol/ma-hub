@@ -2717,7 +2717,6 @@ async function submitAddSignature() {
       signatory_name: name,
       document_name: document.getElementById('s-doc').value,
       party: document.getElementById('s-role').value,
-      role: document.getElementById('s-role').value,
       signed: false
     })});
     closeModal(); switchDealTab('Signatures'); showNotif('Signatory added', 'success');
