@@ -9,59 +9,60 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0F0F0E;--bg2:#161614;--bg3:#1E1E1B;--bg4:#252521;
-  --border:#2A2A26;--border2:#333330;
-  --text:#F0EDE6;--text2:#9B9890;--text3:#5A5854;
-  --gold:#C9A84C;--gold2:#E8C870;--gold-bg:rgba(201,168,76,0.08);--gold-border:rgba(201,168,76,0.2);
-  --green:#4A9B6E;--green-bg:rgba(74,155,110,0.1);--green-border:rgba(74,155,110,0.25);
-  --amber:#C97B2A;--amber-bg:rgba(201,123,42,0.1);--amber-border:rgba(201,123,42,0.25);
-  --red:#B85454;--red-bg:rgba(184,84,84,0.1);--red-border:rgba(184,84,84,0.25);
-  --blue:#4A7BB8;--blue-bg:rgba(74,123,184,0.1);--blue-border:rgba(74,123,184,0.25);
-  --purple:#8B5CF6;--purple-bg:rgba(139,92,246,0.1);--purple-border:rgba(139,92,246,0.25);
+  --bg:#F5F6F8;--bg2:#FFFFFF;--bg3:#F0F1F4;--bg4:#E8E9ED;
+  --border:#DDE0E8;--border2:#C8CBCF;
+  --text:#1A1D23;--text2:#4A5060;--text3:#8A90A0;
+  --gold:#2C5282;--gold2:#2B4C87;--gold-bg:rgba(44,82,130,0.07);--gold-border:rgba(44,82,130,0.18);
+  --green:#1E7D4E;--green-bg:rgba(30,125,78,0.08);--green-border:rgba(30,125,78,0.22);
+  --amber:#B45309;--amber-bg:rgba(180,83,9,0.08);--amber-border:rgba(180,83,9,0.22);
+  --red:#C0392B;--red-bg:rgba(192,57,43,0.08);--red-border:rgba(192,57,43,0.22);
+  --blue:#1A6FA8;--blue-bg:rgba(26,111,168,0.08);--blue-border:rgba(26,111,168,0.22);
+  --purple:#6D3DB5;--purple-bg:rgba(109,61,181,0.08);--purple-border:rgba(109,61,181,0.22);
+  --accent:#2C5282;
   --radius:6px;--radius-lg:10px;--radius-xl:14px;
-  --shadow:0 2px 8px rgba(0,0,0,0.3);--shadow-lg:0 8px 32px rgba(0,0,0,0.4);
+  --shadow:0 1px 4px rgba(0,0,0,0.07);--shadow-lg:0 4px 20px rgba(0,0,0,0.10);
   --font-display:'Playfair Display',serif;--font-sans:'DM Sans',sans-serif;--font-mono:'DM Mono',monospace;
   --sidebar:240px;
 }
 body{font-family:var(--font-sans);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh;display:flex}
 
 /* ── SIDEBAR ── */
-.sidebar{width:var(--sidebar);min-height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:100}
-.sidebar-logo{padding:1.5rem 1.25rem 1rem;border-bottom:1px solid var(--border)}
-.sidebar-logo h1{font-family:var(--font-display);font-size:20px;font-weight:500;color:var(--gold);letter-spacing:0.02em}
-.sidebar-logo p{font-size:11px;color:var(--text3);margin-top:2px;letter-spacing:0.05em;text-transform:uppercase}
+.sidebar{width:var(--sidebar);min-height:100vh;background:#1E3A5F;border-right:none;display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:100}
+.sidebar-logo{padding:1.5rem 1.25rem 1rem;border-bottom:1px solid rgba(255,255,255,0.1)}
+.sidebar-logo h1{font-family:var(--font-display);font-size:20px;font-weight:500;color:#FFFFFF;letter-spacing:0.02em}
+.sidebar-logo p{font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px;letter-spacing:0.05em;text-transform:uppercase}
 .sidebar-nav{flex:1;padding:1rem 0;overflow-y:auto}
 .nav-section{margin-bottom:1.5rem}
-.nav-label{font-size:10px;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;padding:0 1.25rem;margin-bottom:0.5rem}
-.nav-item{display:flex;align-items:center;gap:10px;padding:8px 1.25rem;cursor:pointer;color:var(--text2);transition:all 0.15s;font-size:13.5px;border-left:2px solid transparent}
-.nav-item:hover{color:var(--text);background:var(--bg3)}
-.nav-item.active{color:var(--gold);background:var(--gold-bg);border-left-color:var(--gold)}
+.nav-label{font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:0.1em;text-transform:uppercase;padding:0 1.25rem;margin-bottom:0.5rem}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 1.25rem;cursor:pointer;color:rgba(255,255,255,0.65);transition:all 0.15s;font-size:13.5px;border-left:2px solid transparent}
+.nav-item:hover{color:#FFFFFF;background:rgba(255,255,255,0.08)}
+.nav-item.active{color:#FFFFFF;background:rgba(255,255,255,0.15);border-left-color:#FFFFFF}
 .nav-item svg{width:15px;height:15px;flex-shrink:0;opacity:0.7}
 .nav-item.active svg{opacity:1}
-.sidebar-footer{padding:1rem 1.25rem;border-top:1px solid var(--border)}
-.sidebar-user{font-size:12px;color:var(--text3)}
-.sidebar-user strong{display:block;color:var(--text2);font-size:13px;margin-bottom:2px}
+.sidebar-footer{padding:1rem 1.25rem;border-top:1px solid rgba(255,255,255,0.1)}
+.sidebar-user{font-size:12px;color:rgba(255,255,255,0.45)}
+.sidebar-user strong{display:block;color:rgba(255,255,255,0.8);font-size:13px;margin-bottom:2px}
 
 /* ── MAIN ── */
 .main{margin-left:var(--sidebar);flex:1;min-height:100vh;display:flex;flex-direction:column}
-.topbar{padding:1rem 2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:50}
+.topbar{padding:1rem 2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg2);position:sticky;top:0;z-index:50;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
 .topbar-title{font-family:var(--font-display);font-size:18px;font-weight:500;color:var(--text)}
-.topbar-title span{color:var(--gold)}
+.topbar-title span{color:#2C5282}
 .topbar-actions{display:flex;gap:10px;align-items:center}
 .content{padding:2rem;flex:1}
 
 /* ── BUTTONS ── */
 .btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all 0.15s;font-family:var(--font-sans);white-space:nowrap}
-.btn-primary{background:var(--gold);color:#0F0F0E}
-.btn-primary:hover{background:var(--gold2)}
+.btn-primary{background:#2C5282;color:#FFFFFF}
+.btn-primary:hover{background:#1E3A5F}
 .btn-secondary{background:var(--bg3);color:var(--text2);border:1px solid var(--border2)}
 .btn-secondary:hover{color:var(--text);border-color:var(--border2);background:var(--bg4)}
 .btn-ghost{background:transparent;color:var(--text2)}
 .btn-ghost:hover{color:var(--text);background:var(--bg3)}
 .btn-danger{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
-.btn-danger:hover{background:rgba(184,84,84,0.2)}
+.btn-danger:hover{background:rgba(192,57,43,0.15)}
 .btn-ai{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border)}
-.btn-ai:hover{background:rgba(139,92,246,0.2)}
+.btn-ai:hover{background:rgba(109,61,181,0.15)}
 .btn-sm{padding:5px 11px;font-size:12px}
 .btn-lg{padding:11px 22px;font-size:14px}
 .btn:disabled{opacity:0.4;cursor:not-allowed}
@@ -77,14 +78,14 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text);font-si
 .stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px}
 .stat-value{font-family:var(--font-display);font-size:28px;font-weight:500;color:var(--text);line-height:1}
 .stat-sub{font-size:12px;color:var(--text3);margin-top:6px}
-.stat-gold .stat-value{color:var(--gold)}
+.stat-gold .stat-value{color:#2C5282}
 
 /* ── DEAL CARDS ── */
 .deals-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1rem}
 .deal-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
 .deal-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--border2);transition:background 0.2s}
 .deal-card:hover{border-color:var(--border2);transform:translateY(-1px);box-shadow:var(--shadow-lg)}
-.deal-card:hover::before{background:var(--gold)}
+.deal-card:hover::before{background:#2C5282}
 .deal-card.rag-green::before{background:var(--green)}
 .deal-card.rag-amber::before{background:var(--amber)}
 .deal-card.rag-red::before{background:var(--red)}
@@ -97,29 +98,29 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text);font-si
 .badge-amber{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
 .badge-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
 .badge-blue{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
-.badge-gold{background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold-border)}
+.badge-gold{background:var(--gold-bg);color:#2C5282;border:1px solid var(--gold-border)}
 .badge-purple{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border)}
 .badge-grey{background:var(--bg3);color:var(--text3);border:1px solid var(--border)}
 .deal-meta{display:flex;gap:1rem;font-size:12px;color:var(--text3)}
 .deal-progress{margin-top:12px}
 .progress-bar{height:3px;background:var(--bg4);border-radius:2px;overflow:hidden}
-.progress-fill{height:100%;background:var(--gold);border-radius:2px;transition:width 0.4s ease}
+.progress-fill{height:100%;background:#2C5282;border-radius:2px;transition:width 0.4s ease}
 .progress-label{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-top:4px}
 
 /* ── TABS ── */
 .tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:1.5rem}
 .tab{padding:10px 18px;font-size:13px;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.15s;white-space:nowrap}
 .tab:hover{color:var(--text2)}
-.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.tab.active{color:#2C5282;border-bottom-color:#2C5282}
 
 /* ── FORMS ── */
 .form-group{margin-bottom:1.25rem}
 .form-label{display:block;font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:500;letter-spacing:0.02em}
 .form-input,.form-select,.form-textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:8px 12px;color:var(--text);font-size:13.5px;font-family:var(--font-sans);transition:border-color 0.15s;outline:none}
-.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,0.1)}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:#2C5282;box-shadow:0 0 0 3px rgba(44,82,130,0.1)}
 .form-textarea{resize:vertical;min-height:80px;line-height:1.5}
 .form-select{cursor:pointer}
-.form-select option{background:var(--bg3)}
+.form-select option{background:#FFFFFF}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
 .form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
 
@@ -132,13 +133,13 @@ tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--bg3)}
 
 /* ── MODAL ── */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px)}
-.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-xl);width:100%;max-width:640px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-overlay{position:fixed;inset:0;background:rgba(30,58,95,0.45);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px)}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-xl);width:100%;max-width:640px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
 .modal-lg{max-width:800px}
-.modal-header{padding:1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--bg2);z-index:1}
+.modal-header{padding:1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#FFFFFF;z-index:1}
 .modal-title{font-family:var(--font-display);font-size:18px;font-weight:500;color:var(--text)}
 .modal-body{padding:1.5rem}
-.modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;background:var(--bg2);position:sticky;bottom:0}
+.modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;background:#FFFFFF;position:sticky;bottom:0}
 .close-btn{background:none;border:none;color:var(--text3);cursor:pointer;padding:4px;border-radius:4px;display:flex;align-items:center;justify-content:center;transition:color 0.15s}
 .close-btn:hover{color:var(--text)}
 
@@ -147,8 +148,8 @@ tr:hover td{background:var(--bg3)}
 .checklist-item:last-child{border-bottom:none}
 .checklist-item.completed{opacity:0.5}
 .checklist-cb{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border2);background:transparent;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all 0.15s}
-.checklist-cb.checked{background:var(--gold);border-color:var(--gold)}
-.checklist-cb svg{display:none;width:10px;height:10px;color:#0F0F0E}
+.checklist-cb.checked{background:#2C5282;border-color:#2C5282}
+.checklist-cb svg{display:none;width:10px;height:10px;color:#FFFFFF}
 .checklist-cb.checked svg{display:block}
 .checklist-content{flex:1;min-width:0}
 .checklist-milestone{font-size:13.5px;color:var(--text)}
@@ -162,7 +163,7 @@ tr:hover td{background:var(--bg3)}
 .ai-section-title{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
 .ai-section-title::after{content:'';flex:1;height:1px;background:var(--border)}
 .upload-zone{border:2px dashed var(--border2);border-radius:var(--radius-lg);padding:2rem;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--bg3)}
-.upload-zone:hover,.upload-zone.dragover{border-color:var(--gold);background:var(--gold-bg)}
+.upload-zone:hover,.upload-zone.dragover{border-color:#2C5282;background:rgba(44,82,130,0.05)}
 .upload-zone-icon{width:40px;height:40px;margin:0 auto 12px;color:var(--text3)}
 .upload-zone p{color:var(--text2);font-size:13.5px;margin-bottom:6px}
 .upload-zone small{color:var(--text3);font-size:12px}
@@ -200,14 +201,14 @@ tr:hover td{background:var(--bg3)}
 .chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 
 /* ── NOTIFICATION ── */
-.notif{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:12px 16px;font-size:13.5px;color:var(--text);z-index:999;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:10px;max-width:360px;transform:translateY(100px);opacity:0;transition:all 0.3s ease}
+.notif{position:fixed;bottom:1.5rem;right:1.5rem;background:#FFFFFF;border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px 16px;font-size:13.5px;color:var(--text);z-index:999;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:10px;max-width:360px;transform:translateY(100px);opacity:0;transition:all 0.3s ease}
 .notif.show{transform:translateY(0);opacity:1}
 .notif.success .notif-icon{color:var(--green)}
 .notif.error .notif-icon{color:var(--red)}
 .notif.info .notif-icon{color:var(--blue)}
 
 /* ── LOADING ── */
-.spinner{width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block}
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:#2C5282;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* CONFIG PAGE */
@@ -219,23 +220,23 @@ tr:hover td{background:var(--bg3)}
 .deal-detail-name{font-family:var(--font-display);font-size:26px;font-weight:500;color:var(--text);margin-bottom:8px}
 .deal-detail-meta{display:flex;gap:1rem;align-items:center;flex-wrap:wrap}
 /* WORKFLOW BAR */
-.workflow-bar{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.5rem}
+.workflow-bar{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.5rem}
 .workflow-stages{display:flex;align-items:flex-start;gap:0;margin-bottom:1rem;overflow-x:auto;padding-bottom:4px}
 .workflow-stage{display:flex;flex-direction:column;align-items:center;position:relative;flex:1;min-width:72px;cursor:pointer}
-.workflow-stage-dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--text3);transition:all .2s;position:relative;z-index:2}
-.workflow-stage.done .workflow-stage-dot{background:var(--accent);border-color:var(--accent);color:#1a1a18}
-.workflow-stage.active .workflow-stage-dot{background:var(--surface);border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 3px rgba(201,168,76,0.2)}
+.workflow-stage-dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--border);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--text3);transition:all .2s;position:relative;z-index:2}
+.workflow-stage.done .workflow-stage-dot{background:#2C5282;border-color:#2C5282;color:#FFFFFF}
+.workflow-stage.active .workflow-stage-dot{background:#FFFFFF;border-color:#2C5282;color:#2C5282;box-shadow:0 0 0 3px rgba(44,82,130,0.15)}
 .workflow-stage-label{font-size:9.5px;color:var(--text3);text-align:center;margin-top:6px;line-height:1.3;max-width:72px}
-.workflow-stage.done .workflow-stage-label{color:var(--accent)}
+.workflow-stage.done .workflow-stage-label{color:#2C5282}
 .workflow-stage.active .workflow-stage-label{color:var(--text);font-weight:600}
 .workflow-connector{flex:1;height:2px;background:var(--border);margin-top:13px;min-width:8px;transition:background .2s;align-self:flex-start}
-.workflow-connector.done{background:var(--accent)}
+.workflow-connector.done{background:#2C5282}
 .workflow-progress-row{display:flex;align-items:center;gap:1rem;margin-top:.5rem}
-.workflow-progress-bar{flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden}
-.workflow-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),#e6c55a);border-radius:3px;transition:width .4s ease}
-.workflow-pct{font-size:13px;font-weight:700;color:var(--accent);min-width:36px;text-align:right}
+.workflow-progress-bar{flex:1;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.workflow-progress-fill{height:100%;background:linear-gradient(90deg,#2C5282,#4A7BB8);border-radius:3px;transition:width .4s ease}
+.workflow-pct{font-size:13px;font-weight:700;color:#2C5282;min-width:36px;text-align:right}
 .workflow-blockers{margin-top:.875rem;display:flex;flex-wrap:wrap;gap:6px}
-.workflow-blocker{font-size:11px;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);border-radius:6px;padding:3px 9px;color:var(--text2);display:flex;align-items:center;gap:5px}
+.workflow-blocker{font-size:11px;background:rgba(44,82,130,0.07);border:1px solid rgba(44,82,130,0.2);border-radius:6px;padding:3px 9px;color:var(--text2);display:flex;align-items:center;gap:5px}
 .workflow-blocker.clear{background:rgba(74,155,110,0.08);border-color:rgba(74,155,110,0.25);color:var(--text3)}
 .workflow-footer{margin-top:.875rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
 .workflow-stage-name{font-size:12px;color:var(--text2);font-weight:500}
@@ -257,7 +258,7 @@ tr:hover td{background:var(--bg3)}
 /* ACTIVITY LOG */
 .activity-item{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--border)}
 .activity-item:last-child{border-bottom:none}
-.activity-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:5px}
+.activity-dot{width:8px;height:8px;border-radius:50%;background:#2C5282;flex-shrink:0;margin-top:5px}
 .activity-content{flex:1}
 .activity-text{font-size:13.5px;color:var(--text2)}
 .activity-time{font-size:11px;color:var(--text3);margin-top:3px}
@@ -267,8 +268,33 @@ tr:hover td{background:var(--bg3)}
 .seller-table-input:focus{background:var(--bg3);border-radius:4px}
 
 /* HIGHLIGHT on auto-fill */
-@keyframes highlightFade{0%{background:rgba(201,168,76,0.2)}100%{background:transparent}}
+@keyframes highlightFade{0%{background:rgba(44,82,130,0.15)}100%{background:transparent}}
 .auto-filled{animation:highlightFade 2s ease forwards}
+
+/* ── DEADLINE BELL ── */
+.bell-btn{position:relative;background:none;border:none;cursor:pointer;padding:6px;border-radius:var(--radius);color:var(--text2);display:flex;align-items:center;justify-content:center;transition:all 0.15s}
+.bell-btn:hover{background:var(--bg3);color:var(--text)}
+.bell-btn svg{width:20px;height:20px}
+.bell-badge{position:absolute;top:2px;right:2px;min-width:16px;height:16px;border-radius:8px;background:#C0392B;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 3px;line-height:1}
+.deadline-panel{position:fixed;top:56px;right:1.25rem;width:360px;max-height:480px;background:#FFFFFF;border:1px solid var(--border);border-radius:var(--radius-xl);box-shadow:var(--shadow-lg);z-index:150;overflow:hidden;display:none;flex-direction:column}
+.deadline-panel.open{display:flex}
+.deadline-panel-header{padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.deadline-panel-title{font-size:14px;font-weight:600;color:var(--text)}
+.deadline-panel-body{overflow-y:auto;flex:1}
+.deadline-item{display:flex;align-items:flex-start;gap:10px;padding:10px 1.25rem;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.12s}
+.deadline-item:last-child{border-bottom:none}
+.deadline-item:hover{background:var(--bg3)}
+.deadline-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.deadline-dot.overdue{background:#C0392B}
+.deadline-dot.today{background:#B45309}
+.deadline-dot.soon{background:#1A6FA8}
+.deadline-item-deal{font-size:11px;color:var(--text3);margin-top:2px}
+.deadline-item-milestone{font-size:13px;color:var(--text);font-weight:500}
+.deadline-item-date{font-size:11px;margin-top:3px;font-weight:500}
+.deadline-item-date.overdue{color:#C0392B}
+.deadline-item-date.today{color:#B45309}
+.deadline-item-date.soon{color:#1A6FA8}
+.deadline-empty{padding:2rem;text-align:center;color:var(--text3);font-size:13px}
 </style>
 </head>
 <body>
@@ -312,6 +338,10 @@ tr:hover td{background:var(--bg3)}
   <div class="topbar">
     <div class="topbar-title" id="topbar-title">Dashboard</div>
     <div class="topbar-actions" id="topbar-actions">
+    <button class="bell-btn" id="bell-btn" onclick="toggleDeadlinePanel()" title="Upcoming deadlines">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="bell-badge" id="bell-badge" style="display:none">0</span>
+    </button>
       <button class="btn btn-primary" onclick="openNewDeal()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         New Deal
@@ -325,6 +355,18 @@ tr:hover td{background:var(--bg3)}
 <div class="notif" id="notif">
   <svg class="notif-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>
   <span id="notif-text"></span>
+</div>
+
+
+<!-- DEADLINE PANEL -->
+<div class="deadline-panel" id="deadline-panel">
+  <div class="deadline-panel-header">
+    <span class="deadline-panel-title">Upcoming Deadlines</span>
+    <button class="btn btn-ghost btn-sm" onclick="toggleDeadlinePanel()">✕</button>
+  </div>
+  <div class="deadline-panel-body" id="deadline-panel-body">
+    <div class="deadline-empty">Loading…</div>
+  </div>
 </div>
 
 <!-- MODALS -->
@@ -879,7 +921,7 @@ async function renderPipeline() {
             <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem;cursor:pointer;border-left:3px solid var(--${(d.rag_status||'Green').toLowerCase()==='green'?'green':(d.rag_status||'').toLowerCase()==='red'?'red':'amber'})" onclick="navigate('deal', ${JSON.stringify(d).replace(/"/g, '&quot;')})">
               <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px">${d.deal_name}</div>
               <div style="font-size:11px;color:var(--text3)">${d.client_name || '—'}</div>
-              ${d.deal_value ? `<div style="font-size:12px;color:var(--gold);margin-top:6px">£${Number(d.deal_value).toLocaleString()}</div>` : ''}
+              ${d.deal_value ? `<div style="font-size:12px;color:#2C5282;margin-top:6px">£${Number(d.deal_value).toLocaleString()}</div>` : ''}
             </div>`).join('')}
           </div>
         </div>`;
@@ -971,7 +1013,7 @@ async function switchDealTab(tab, el) {
       <div class="card">
         <div style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:1rem">Data Room</div>
         ${d.vdr_link
-          ? `<a href="${d.vdr_link}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;color:var(--accent);font-size:13.5px;text-decoration:none;transition:opacity .15s" onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">
+          ? `<a href="${d.vdr_link}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 16px;color:var(--accent);font-size:13.5px;text-decoration:none;transition:opacity .15s" onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
               Open Data Room
             </a>`
@@ -1034,7 +1076,7 @@ async function switchDealTab(tab, el) {
       </div>
     </div>
     <div id="doc-upload-progress" style="display:none;margin-bottom:1rem">
-      <div style="background:var(--surface2);border-radius:6px;overflow:hidden;height:6px">
+      <div style="background:var(--bg3);border-radius:6px;overflow:hidden;height:6px">
         <div id="doc-upload-bar" style="height:100%;background:var(--accent);width:0%;transition:width .3s"></div>
       </div>
       <div id="doc-upload-label" style="font-size:12px;color:var(--text3);margin-top:6px">Uploading…</div>
@@ -1096,7 +1138,7 @@ async function switchDealTab(tab, el) {
         ${dates && dates.length ? dates.map(dt => `
           <tr>
             <td style="color:var(--text)">${dt.milestone||'—'}</td>
-            <td style="color:var(--gold)">${dt.expected_date ? formatDate(dt.expected_date) : '—'}</td>
+            <td style="color:#2C5282">${dt.expected_date ? formatDate(dt.expected_date) : '—'}</td>
             <td><span class="badge badge-${dt.status==='Done'?'green':'amber'}">${dt.status||'Pending'}</span></td>
             <td style="color:var(--text3)">${dt.actual_date ? formatDate(dt.actual_date) : '—'}</td>
           </tr>`).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:2rem">No critical dates added</td></tr>'}
@@ -1978,106 +2020,246 @@ async function loadChecklistTemplate(role) {
 function getBuyerChecklist() {
   return [
     // CLIENT ONBOARDING
-    { milestone: 'Engagement letter / client care letter signed', category: 'Client Onboarding', responsible: 'Client', completed: false },
+    { milestone: 'Engagement letter / client care letter sent to client', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
+    { milestone: 'Engagement letter / client care letter signed and returned', category: 'Client Onboarding', responsible: 'Client', completed: false },
     { milestone: 'Conflict check completed', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
-    { milestone: 'AML / KYC checks completed', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
-    { milestone: 'Source of funds checked or deferred to pre-completion', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
+    { milestone: 'AML / KYC checks completed for client', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
+    { milestone: 'AML / KYC checks completed for beneficial owners / UBOs', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
+    { milestone: 'Source of funds — initial enquiry made with client', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
+    { milestone: 'Source of funds — evidence received and reviewed', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client authorised to give instructions (board authority confirmed if corporate buyer)', category: 'Client Onboarding', responsible: 'Client', completed: false },
+    { milestone: 'Fee estimate / costs agreed with client', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
     // PRE-TRANSACTION
-    { milestone: 'Instructions confirmed with Seller solicitors', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
-    { milestone: 'HOTs received', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'Instructions confirmed in writing with client', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'Seller solicitors identified and details confirmed', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'HOTs received from Seller / Seller solicitors', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
     { milestone: 'HOTs reviewed and reported to client', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'HOTs negotiated (if required)', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
     { milestone: 'HOTs agreed by all parties', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
-    { milestone: 'Confidentiality agreement signed', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
-    { milestone: 'Exclusivity agreement signed', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'Confidentiality / NDA agreement reviewed and signed', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'Exclusivity agreement reviewed and signed', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'Transaction structure advice given to client (share vs asset; tax considerations)', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client accountants / tax advisers instructed (if applicable)', category: 'Pre-Transaction', responsible: 'Client', completed: false },
+    { milestone: 'W&I insurance — client advised and decision made', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    // COMPANY SEARCHES
+    { milestone: 'Companies House search on Target', category: 'Company Searches', responsible: 'Solicitor', completed: false },
+    { milestone: 'Target registered charges search (Companies House / Land Charges)', category: 'Company Searches', responsible: 'Solicitor', completed: false },
+    { milestone: 'Insolvency search on Target company and directors', category: 'Company Searches', responsible: 'Solicitor', completed: false },
+    { milestone: 'Litigation search / court judgments search on Target', category: 'Company Searches', responsible: 'Solicitor', completed: false },
+    { milestone: 'Trade mark and IP searches (if applicable)', category: 'Company Searches', responsible: 'Solicitor', completed: false },
+    { milestone: 'Search results reviewed and reported to client', category: 'Company Searches', responsible: 'Solicitor', completed: false },
     // DUE DILIGENCE
-    { milestone: 'LDDQ sent to Seller', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
-    { milestone: 'Data room access obtained', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
-    { milestone: 'DD documents received', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
-    { milestone: 'DD review completed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Legal due diligence questionnaire (LDDQ) sent to Seller solicitors', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Data room / VDR access obtained', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'DD documents received and indexed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Corporate / constitutional documents reviewed (articles, statutory books, share register)', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Material contracts reviewed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Change of control provisions identified and reported', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Key contracts — consent requirements identified', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Employment contracts and TUPE position reviewed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'TUPE obligations reported to client', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Pension scheme — type identified and obligations confirmed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'IP ownership confirmed (patents, trade marks, domain names, software)', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'IT / data review — GDPR data processor agreements reviewed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Property — leases and title reviewed (or referred to property solicitor)', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Litigation and disputes reviewed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Regulatory licences and permits reviewed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Environmental matters reviewed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Tax — tax warranties and indemnity requirements flagged for client accountants', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Financial assistance (s678 CA2006) analysis completed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'DD report drafted', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
     { milestone: 'DD report submitted to client', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
-    { milestone: 'Client approved DD report', category: 'Due Diligence', responsible: 'Client', completed: false },
+    { milestone: 'Client approved DD report / confirmed instructions to proceed', category: 'Due Diligence', responsible: 'Client', completed: false },
+    { milestone: 'Follow-up DD questions raised with Seller', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Follow-up DD responses received and reviewed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
     // SPA NEGOTIATION
-    { milestone: 'First draft SPA received / sent', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
+    { milestone: 'First draft SPA received from Seller solicitors / prepared for Buyer', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
+    { milestone: 'SPA reviewed and amendments marked up', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
+    { milestone: 'SPA — client report and advice given (key risks, warranty position, price mechanics)', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client instructions received on SPA negotiating position', category: 'SPA Negotiation', responsible: 'Client', completed: false },
+    { milestone: 'SPA — negotiations conducted (all rounds)', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
+    { milestone: 'Completion mechanism agreed (locked box vs completion accounts)', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
+    { milestone: 'Warranty and indemnity schedule negotiated', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
+    { milestone: 'Tax covenant / tax deed reviewed and negotiated', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
+    { milestone: 'Conditions precedent agreed', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
+    { milestone: 'Restrictive covenants / non-compete provisions agreed', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
+    { milestone: 'Service agreements / consultancy agreements negotiated (if applicable)', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
     { milestone: 'SPA negotiations completed', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
     // DISCLOSURE LETTER
-    { milestone: 'Disclosure letter received from Seller', category: 'Disclosure Letter', responsible: 'Solicitor', completed: false },
-    { milestone: 'Disclosure letter reviewed', category: 'Disclosure Letter', responsible: 'Solicitor', completed: false },
-    { milestone: 'DL report sent to client', category: 'Disclosure Letter', responsible: 'Solicitor', completed: false },
-    { milestone: 'SPA updated for DL indemnities', category: 'Disclosure Letter', responsible: 'Solicitor', completed: false },
-    { milestone: 'Disclosure letter agreed', category: 'Disclosure Letter', responsible: 'Solicitor', completed: false },
+    { milestone: 'Disclosure letter received from Seller solicitors', category: 'Disclosure Letter', responsible: 'Solicitor', completed: false },
+    { milestone: 'Disclosure letter reviewed against warranties', category: 'Disclosure Letter', responsible: 'Solicitor', completed: false },
+    { milestone: 'DL report sent to client (risks flagged)', category: 'Disclosure Letter', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client instructions received on disclosure letter', category: 'Disclosure Letter', responsible: 'Client', completed: false },
+    { milestone: 'DL — specific disclosures reviewed and challenged as appropriate', category: 'Disclosure Letter', responsible: 'Solicitor', completed: false },
+    { milestone: 'SPA updated for any indemnities arising from disclosures', category: 'Disclosure Letter', responsible: 'Solicitor', completed: false },
+    { milestone: 'Disclosure letter agreed in final form', category: 'Disclosure Letter', responsible: 'Solicitor', completed: false },
     { milestone: 'SPA in final agreed form', category: 'Disclosure Letter', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client given final SPA and DL for approval before signing', category: 'Disclosure Letter', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client confirmed approval of final SPA and DL', category: 'Disclosure Letter', responsible: 'Client', completed: false },
     // ANCILLARIES
-    { milestone: 'Target board resolution drafted', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    { milestone: 'Target board resolution drafted (to approve share transfer, register new shareholders, appoint/remove directors)', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
     { milestone: 'Target board resolution approved by client', category: 'Ancillaries', responsible: 'Client', completed: false },
-    { milestone: 'Buyer board resolution drafted', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    { milestone: 'Buyer board resolution drafted (to approve acquisition and execution of SPA)', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
     { milestone: 'Buyer board resolution approved by client', category: 'Ancillaries', responsible: 'Client', completed: false },
-    { milestone: 'Stock transfer form drafted', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    { milestone: 'Stock transfer form(s) (J30) drafted', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
     { milestone: 'Stock transfer form sent to Seller for execution', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
-    { milestone: 'Resignation letter drafted', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
-    { milestone: 'Resignation letter approved by client', category: 'Ancillaries', responsible: 'Client', completed: false },
-    { milestone: 'Consent to act drafted', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    { milestone: 'Resignation letter(s) for outgoing directors drafted', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    { milestone: 'Resignation letter(s) approved by client', category: 'Ancillaries', responsible: 'Client', completed: false },
+    { milestone: 'Consent to act for incoming director(s) drafted', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
     { milestone: 'Consent to act approved by client', category: 'Ancillaries', responsible: 'Client', completed: false },
-    { milestone: 'PSC cessation letter drafted', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    { milestone: 'PSC cessation notification (PSC07 / confirmation statement update) drafted', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
     { milestone: 'PSC cessation letter approved by client', category: 'Ancillaries', responsible: 'Client', completed: false },
-    { milestone: 'PSC notification drafted', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    { milestone: 'PSC notification for incoming PSC drafted', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
     { milestone: 'PSC notification approved by client', category: 'Ancillaries', responsible: 'Client', completed: false },
-    { milestone: 'Indemnity for lost share certificate drafted', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
-    { milestone: 'Indemnity for lost share certificate approved by client', category: 'Ancillaries', responsible: 'Client', completed: false },
+    { milestone: 'Indemnity for lost share certificate drafted (if applicable)', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    { milestone: 'Indemnity for lost share certificate approved by client (if applicable)', category: 'Ancillaries', responsible: 'Client', completed: false },
+    { milestone: 'New share certificates to be issued — confirmed with client', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    { milestone: 'Shareholders agreement / investment agreement drafted (if applicable)', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    { milestone: 'Shareholders agreement approved by client (if applicable)', category: 'Ancillaries', responsible: 'Client', completed: false },
+    { milestone: 'Completion agenda / bible index prepared', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
     // PRE-COMPLETION & EXECUTION
+    { milestone: 'Conditions precedent — satisfaction confirmed (if applicable)', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
+    { milestone: 'Source of funds evidence obtained and verified pre-completion', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
+    { milestone: 'Completion funds received into client account from Buyer', category: 'Pre-Completion & Execution', responsible: 'Client', completed: false },
     { milestone: 'SPA execution copy sent to client', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
     { milestone: 'Disclosure letter execution copy sent to client', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
-    { milestone: 'Board resolutions sent to client for execution', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
-    { milestone: 'PSC acceptance sent for execution', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
-    { milestone: 'Director consent to act sent for execution', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
-    { milestone: 'Source of funds evidence obtained pre-completion', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
-    { milestone: 'Completion funds received from client', category: 'Pre-Completion & Execution', responsible: 'Client', completed: false },
+    { milestone: 'All ancillary documents sent to client for execution', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
     { milestone: 'Signed SPA received from client', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
-    { milestone: 'Signed board resolutions received', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
-    { milestone: 'Signed resignation letters received', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
+    { milestone: 'Signed buyer board resolution received', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
     { milestone: 'Signed PSC acceptance received', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
-    { milestone: 'Signed director acceptance received', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
+    { milestone: 'Signed director consent to act received', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
     { milestone: 'Signed stock transfer form received from Seller', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
+    { milestone: 'Signed resignation letters received from outgoing directors', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
+    { milestone: 'Target share certificates obtained from Seller (or indemnity in place)', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
+    { milestone: 'Completion funds transfer instructions confirmed with client', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
     // COMPLETION
-    { milestone: 'Completion meeting held', category: 'Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Completion agenda circulated to all parties', category: 'Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Completion meeting held (virtual or in person)', category: 'Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Completion funds transferred to Seller solicitors', category: 'Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Completion confirmed by Seller solicitors (funds received)', category: 'Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client notified that completion has occurred', category: 'Completion', responsible: 'Solicitor', completed: false },
     // POST-COMPLETION
-    { milestone: 'Completion bible prepared for client', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'Completion bible prepared for Seller', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'Completion bible sent to client', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'Completion bible sent to Seller', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'Stamp duty paid on stock transfer form(s)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'STF and stamp duty receipt sent to HMRC', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'Companies House filings submitted (TM01, AP01, AD01)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'New confirmation statement filed', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Companies House — TM01 filed (removal of outgoing directors)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Companies House — AP01 filed (appointment of incoming directors)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Companies House — AD01 filed (change of registered office, if applicable)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Companies House — PSC register updated (CH filing)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Companies House — confirmation statement updated / filed', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Stamp duty — SDLT / Stamp Duty reserve calculated and confirmed with accountants', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Stamp duty paid on stock transfer form(s) (within 30 days)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'STF and stamp duty payment receipt submitted to HMRC (or CREST where applicable)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
     { milestone: 'Stamped STF received from HMRC', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Target share register updated to reflect new shareholder(s)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'New share certificate(s) issued to Buyer', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
     { milestone: 'Stamped STF sent to client', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'New share certificate(s) sent to client', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Completion bible / closing bible prepared (all executed documents collated)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Completion bible sent to client', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Completion bible sent to Seller solicitors', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'W&I insurance policy issued and copy sent to client (if applicable)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client notified of post-completion obligations (deferred consideration, warranty periods, etc.)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'File review and archiving', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
     { milestone: 'File closed', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
   ];
 }
 
 function getSellerChecklist() {
   return [
-    { milestone: 'Receive and review HOT', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
-    { milestone: 'HOT signed by all parties', category: 'Pre-Transaction', responsible: 'Client', completed: false },
-    { milestone: 'Conflict check completed', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
-    { milestone: 'Engagement letter / client care letter sent', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
-    { milestone: 'AML / KYC checks completed', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
-    { milestone: 'Seller board resolution to proceed approved', category: 'Pre-Transaction', responsible: 'Client', completed: false },
-    { milestone: 'Confidentiality agreement signed', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
-    { milestone: 'Due diligence questionnaire received and reviewed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
-    { milestone: 'Data room organised and populated', category: 'Due Diligence', responsible: 'Client', completed: false },
-    { milestone: 'Due diligence responses provided to Buyer', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
-    { milestone: 'First draft SPA received and reviewed', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
-    { milestone: 'SPA negotiations completed', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
-    { milestone: 'Disclosure letter drafted and agreed', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
-    { milestone: 'SPA approved by Seller board', category: 'Signing', responsible: 'Client', completed: false },
-    { milestone: 'SPA executed by all parties', category: 'Signing', responsible: 'Solicitor', completed: false },
-    { milestone: 'Target board resolutions prepared', category: 'Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'Stock transfer form(s) executed', category: 'Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'Resignation letters prepared and signed', category: 'Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'Share certificates located / indemnities prepared', category: 'Completion', responsible: 'Client', completed: false },
-    { milestone: 'Completion meeting held', category: 'Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'Completion proceeds received and distributed', category: 'Post-Completion', responsible: 'Client', completed: false },
-    { milestone: 'Closing / bible received from Buyer solicitors', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    // CLIENT ONBOARDING
+    { milestone: 'Engagement letter / client care letter sent to client', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
+    { milestone: 'Engagement letter / client care letter signed and returned', category: 'Client Onboarding', responsible: 'Client', completed: false },
+    { milestone: 'Conflict check completed', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
+    { milestone: 'AML / KYC checks completed', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
+
+    // PRE-TRANSACTION
+    { milestone: 'Instructions confirmed with Buyer solicitors', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'HOTs received from Buyer / Buyer solicitors', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'HOTs reviewed', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'HOTs agreed by all parties', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'Confidentiality / NDA agreement signed (mandatory)', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'Exclusivity agreement signed', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+
+    // DUE DILIGENCE
+    { milestone: 'LDDQ received from Buyer solicitors', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'LDDQ reviewed and discussed with client', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'LDDQ sent to client for responses', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'LDDQ responses received from client', category: 'Due Diligence', responsible: 'Client', completed: false },
+    { milestone: 'LDDQ responses reviewed by solicitor', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Data room (VDR) created and organised', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Due diligence documents received from client and added to VDR', category: 'Due Diligence', responsible: 'Client', completed: false },
+    { milestone: 'VDR access granted to Buyer solicitors', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'LDDQ responses sent to Buyer / uploaded to VDR', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    // Additional enquiries loop
+    { milestone: '[Loop] Additional enquiries received from Buyer solicitors', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: '[Loop] Additional enquiries sent to client for response', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: '[Loop] Additional enquiry responses received from client', category: 'Due Diligence', responsible: 'Client', completed: false },
+    { milestone: '[Loop] Additional enquiry responses sent to Buyer', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+
+    // SPA STAGE
+    { milestone: 'First draft SPA received from Buyer solicitors', category: 'SPA', responsible: 'Solicitor', completed: false },
+    { milestone: 'SPA reviewed by solicitor', category: 'SPA', responsible: 'Solicitor', completed: false },
+    { milestone: 'SPA review report sent to client with advice on warranties and key terms', category: 'SPA', responsible: 'Solicitor', completed: false },
+    { milestone: 'Warranties discussed with client — instructions received for disclosure purposes', category: 'SPA', responsible: 'Client', completed: false },
+    // SPA negotiation loop
+    { milestone: '[Loop] Revised SPA sent to Buyer solicitors with amendments', category: 'SPA', responsible: 'Solicitor', completed: false },
+    { milestone: '[Loop] Revised SPA received back from Buyer solicitors', category: 'SPA', responsible: 'Solicitor', completed: false },
+    { milestone: '[Loop] Further SPA amendments reported to client and instructions taken', category: 'SPA', responsible: 'Solicitor', completed: false },
+    { milestone: 'SPA agreed in principle / approved by all parties', category: 'SPA', responsible: 'Solicitor', completed: false },
+
+    // DISCLOSURE LETTER STAGE
+    { milestone: 'Disclosure letter prepared by solicitor', category: 'Disclosure Letter', responsible: 'Solicitor', completed: false },
+    { milestone: 'Disclosure letter sent to client for review and input', category: 'Disclosure Letter', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client disclosure letter instructions received', category: 'Disclosure Letter', responsible: 'Client', completed: false },
+    { milestone: 'Disclosure letter sent to Buyer solicitors', category: 'Disclosure Letter', responsible: 'Solicitor', completed: false },
+    { milestone: 'Updated SPA received from Buyer (with indemnities arising from disclosures)', category: 'Disclosure Letter', responsible: 'Solicitor', completed: false },
+    { milestone: 'Updated SPA with indemnities report sent to client', category: 'Disclosure Letter', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client approval / comments received on indemnities', category: 'Disclosure Letter', responsible: 'Client', completed: false },
+    // DL / SPA negotiation loop
+    { milestone: '[Loop] Revised DL / SPA comments reverted to Buyer solicitors', category: 'Disclosure Letter', responsible: 'Solicitor', completed: false },
+    { milestone: '[Loop] Revised DL / SPA received back from Buyer solicitors', category: 'Disclosure Letter', responsible: 'Solicitor', completed: false },
+    { milestone: '[Loop] Further DL / SPA round reported to client and instructions taken', category: 'Disclosure Letter', responsible: 'Solicitor', completed: false },
+    { milestone: 'SPA approved in final agreed form', category: 'Disclosure Letter', responsible: 'Solicitor', completed: false },
+    { milestone: 'Buyer approves disclosure letter in final agreed form', category: 'Disclosure Letter', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client gives final approval of SPA and DL before signing', category: 'Disclosure Letter', responsible: 'Client', completed: false },
+
+    // ANCILLARIES STAGE
+    { milestone: 'All ancillary documents received from Buyer solicitors (board resolutions, STF, resignations, PSC docs, consents etc.)', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    { milestone: 'Ancillary documents reviewed by solicitor', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    { milestone: 'Ancillary documents sent to client with report', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client approval or comments received on ancillaries', category: 'Ancillaries', responsible: 'Client', completed: false },
+    { milestone: 'Ancillary comments / amendments reverted to Buyer solicitors (if applicable)', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    { milestone: 'Ancillaries agreed in final form', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+
+    // PRE-COMPLETION & EXECUTION
+    { milestone: 'Share certificates located and provided to solicitor', category: 'Pre-Completion & Execution', responsible: 'Client', completed: false },
+    { milestone: 'Indemnity for lost share certificate prepared (if applicable)', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
+    { milestone: 'Execution copies of all documents sent to client for signing', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
+    { milestone: 'Documents to be signed — SPA', category: 'Pre-Completion & Execution', responsible: 'Client', completed: false },
+    { milestone: 'Documents to be signed — Disclosure Letter', category: 'Pre-Completion & Execution', responsible: 'Client', completed: false },
+    { milestone: 'Documents to be signed — Seller board resolution', category: 'Pre-Completion & Execution', responsible: 'Client', completed: false },
+    { milestone: 'Documents to be signed — Target board resolution', category: 'Pre-Completion & Execution', responsible: 'Client', completed: false },
+    { milestone: 'Documents to be signed — Stock transfer form(s) (J30)', category: 'Pre-Completion & Execution', responsible: 'Client', completed: false },
+    { milestone: 'Documents to be signed — Director resignation letter(s)', category: 'Pre-Completion & Execution', responsible: 'Client', completed: false },
+    { milestone: 'Documents to be signed — PSC cessation notification', category: 'Pre-Completion & Execution', responsible: 'Client', completed: false },
+    { milestone: 'Documents to be signed — Any other ancillaries (consents, service agreements etc.)', category: 'Pre-Completion & Execution', responsible: 'Client', completed: false },
+    { milestone: 'All signed documents received from client', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
+    { milestone: 'All signed documents checked and completion pack prepared', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
+
+    // COMPLETION
+    { milestone: 'Completion agenda circulated to all parties', category: 'Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Sale proceeds received from Buyer solicitors into client account', category: 'Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Completion confirmed — all documents released / exchanged', category: 'Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client notified that completion has occurred', category: 'Completion', responsible: 'Solicitor', completed: false },
+
+    // POST-COMPLETION
+    { milestone: 'Sale proceeds sent to client (less agreed deductions)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client receipt / completion statement provided', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Completion bible prepared for client (all executed documents)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Completion bible prepared for Buyer solicitors', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Completion bible sent to client', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Completion bible sent to Buyer solicitors', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client notified of any post-completion obligations (deferred consideration, earn-out, warranties etc.)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'File review and archiving', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'File closed', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
   ];
 }
 
@@ -2165,7 +2347,7 @@ async function submitNewDeal() {
       'HOTs Signed', 'CA/NDA Signed', 'Exclusivity Signed', 'Exclusivity Expiry',
       'DD Bundle Received', 'DD Report Signed Off', 'SPA Agreed',
       'Disclosure Letter Approved', 'All Ancillaries Agreed', 'Completion',
-      'Companies House Deadline', 'SDLT Deadline', 'Stamp Duty Deadline'
+      'Companies House Deadline', 'Stamp Duty Deadline'
     ];
     for (const milestone of standardDates) {
       try {
@@ -2569,11 +2751,118 @@ function fieldRow(label, value, mono = false) {
   </div>`;
 }
 
+
+// ═══════════════════════════════════════════════════════
+// DEADLINE NOTIFICATIONS
+// ═══════════════════════════════════════════════════════
+let deadlineAlerts = [];
+
+async function checkDeadlines() {
+  if (!config.supabaseUrl || !config.supabaseKey) return;
+  try {
+    // Load all active deals
+    const allDeals = await sbFetch('deals?select=id,deal_name&status=eq.Active') || [];
+    const today = new Date(); today.setHours(0,0,0,0);
+    const in7 = new Date(today); in7.setDate(today.getDate() + 7);
+
+    const alerts = [];
+
+    for (const deal of allDeals) {
+      let dates = [];
+      try { dates = await sbFetch(`critical_dates?deal_id=eq.${deal.id}&status=neq.Done&order=expected_date.asc`) || []; } catch(e) {}
+      for (const d of dates) {
+        if (!d.expected_date) continue;
+        const due = new Date(d.expected_date); due.setHours(0,0,0,0);
+        const diffDays = Math.round((due - today) / 86400000);
+        if (diffDays <= 7) {
+          alerts.push({
+            deal_id: deal.id,
+            deal_name: deal.deal_name,
+            milestone: d.milestone,
+            due,
+            diffDays
+          });
+        }
+      }
+    }
+
+    // Sort: overdue first, then soonest
+    alerts.sort((a,b) => a.diffDays - b.diffDays);
+    deadlineAlerts = alerts;
+
+    // Update badge
+    const badge = document.getElementById('bell-badge');
+    if (alerts.length > 0) {
+      badge.textContent = alerts.length > 9 ? '9+' : alerts.length;
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+
+    renderDeadlinePanel();
+  } catch(e) { console.error('Deadline check failed', e); }
+}
+
+function renderDeadlinePanel() {
+  const body = document.getElementById('deadline-panel-body');
+  if (!body) return;
+
+  if (!deadlineAlerts.length) {
+    body.innerHTML = '<div class="deadline-empty">No deadlines due in the next 7 days ✓</div>';
+    return;
+  }
+
+  body.innerHTML = deadlineAlerts.map(a => {
+    const cls = a.diffDays < 0 ? 'overdue' : a.diffDays === 0 ? 'today' : 'soon';
+    const label = a.diffDays < 0
+      ? `Overdue by ${Math.abs(a.diffDays)} day${Math.abs(a.diffDays) !== 1 ? 's' : ''}`
+      : a.diffDays === 0
+        ? 'Due today'
+        : `Due in ${a.diffDays} day${a.diffDays !== 1 ? 's' : ''} — ${a.due.toLocaleDateString('en-GB', {day:'2-digit',month:'short'})}`;
+    return `
+    <div class="deadline-item" onclick="navigateToDealFromAlert('${a.deal_id}')">
+      <div class="deadline-dot ${cls}"></div>
+      <div style="flex:1;min-width:0">
+        <div class="deadline-item-milestone">${a.milestone}</div>
+        <div class="deadline-item-deal">${a.deal_name}</div>
+        <div class="deadline-item-date ${cls}">${label}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleDeadlinePanel() {
+  const panel = document.getElementById('deadline-panel');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) renderDeadlinePanel();
+}
+
+// Close panel if clicking outside
+document.addEventListener('click', (e) => {
+  const panel = document.getElementById('deadline-panel');
+  const bell = document.getElementById('bell-btn');
+  if (panel && panel.classList.contains('open') && !panel.contains(e.target) && !bell.contains(e.target)) {
+    panel.classList.remove('open');
+  }
+});
+
+async function navigateToDealFromAlert(dealId) {
+  document.getElementById('deadline-panel').classList.remove('open');
+  // Find the deal and navigate to it
+  await loadDeals();
+  const deal = deals.find(d => d.id === dealId);
+  if (deal) navigate('deal', deal);
+}
+
 // ═══════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════
 loadConfig();
 navigate('dashboard');
+// Check deadlines after a short delay to let config load
+setTimeout(checkDeadlines, 1500);
+// Re-check every 30 minutes
+setInterval(checkDeadlines, 30 * 60 * 1000);
 </script>
 </body>
 </html>
