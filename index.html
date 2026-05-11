@@ -590,91 +590,128 @@ async function loadCriticalDates(dealId) {
 // ═══════════════════════════════════════════════════════
 // WORKFLOW ENGINE
 // ═══════════════════════════════════════════════════════
-const WORKFLOW_STAGES = [
-  {
-    id: 'onboarding', label: 'Onboarding', pct: 0,
-    blockers: [
-      'Engagement letter / client care letter signed',
-      'Conflict check completed',
-      'AML / KYC checks completed',
-      'Source of funds checked or deferred to pre-completion'
-    ]
-  },
-  {
-    id: 'hot-nda', label: 'HOTs & NDA', pct: 10,
-    blockers: [
-      'HOTs agreed by all parties',
-      'Confidentiality agreement signed',
-      'Exclusivity agreement signed'
-    ]
-  },
-  {
-    id: 'due-diligence', label: 'Due Diligence', pct: 20,
-    blockers: [
-      'LDDQ sent to Seller',
-      'Data room access obtained',
-      'DD review completed',
-      'DD report submitted to client',
-      'Client approved DD report'
-    ]
-  },
-  {
-    id: 'spa', label: 'SPA', pct: 35,
-    blockers: [
-      'First draft SPA received / sent',
-      'SPA negotiations completed'
-    ]
-  },
-  {
-    id: 'disclosure', label: 'Disclosure', pct: 50,
-    blockers: [
-      'Disclosure letter received from Seller',
-      'Disclosure letter agreed',
-      'SPA in final agreed form'
-    ]
-  },
-  {
-    id: 'ancillaries', label: 'Ancillaries', pct: 65,
-    blockers: [
-      'Target board resolution approved by client',
-      'Buyer board resolution approved by client',
-      'Stock transfer form sent to Seller for execution',
-      'Resignation letter approved by client',
-      'Consent to act approved by client',
-      'PSC cessation letter approved by client',
-      'PSC notification approved by client'
-    ]
-  },
-  {
-    id: 'execution', label: 'Execution', pct: 80,
-    blockers: [
-      'Source of funds evidence obtained pre-completion',
-      'Completion funds received from client',
-      'Signed SPA received from client',
-      'Signed board resolutions received',
-      'Signed PSC acceptance received',
-      'Signed stock transfer form received from Seller'
-    ]
-  },
-  {
-    id: 'completion', label: 'Completion', pct: 90,
-    blockers: [
-      'Completion meeting held'
-    ]
-  },
-  {
-    id: 'post-completion', label: 'Post-Completion', pct: 100,
-    blockers: [
-      'Companies House filings submitted (TM01, AP01, AD01)',
-      'Stamp duty paid on stock transfer form(s)',
-      'Completion bible sent to client',
-      'Stamped STF sent to client',
-      'File closed'
-    ]
-  }
-];
+function getWorkflowStages(role) {
+  const isSeller = role === 'Seller';
+  return [
+    {
+      id: 'onboarding', label: 'Onboarding', pct: 0,
+      blockers: isSeller ? [
+        'Engagement letter / client care letter signed and returned',
+        'Conflict check completed',
+        'AML / KYC checks completed'
+      ] : [
+        'Engagement letter / client care letter signed and returned',
+        'Conflict check completed',
+        'AML / KYC checks completed for client',
+        'Source of funds — evidence received and reviewed'
+      ]
+    },
+    {
+      id: 'hot-nda', label: 'HOTs & NDA', pct: 10,
+      blockers: isSeller ? [
+        'HOTs agreed by all parties',
+        'Confidentiality / NDA agreement signed (mandatory)',
+        'Exclusivity agreement signed'
+      ] : [
+        'HOTs agreed by all parties',
+        'Confidentiality / NDA agreement reviewed and signed',
+        'Exclusivity agreement reviewed and signed'
+      ]
+    },
+    {
+      id: 'due-diligence', label: 'Due Diligence', pct: 20,
+      blockers: isSeller ? [
+        'LDDQ responses sent to Buyer / uploaded to VDR',
+        'VDR access granted to Buyer solicitors',
+        'Due diligence documents received from client and added to VDR'
+      ] : [
+        'LDDQ sent to Seller solicitors',
+        'Data room (VDR) access obtained',
+        'DD report submitted to client',
+        'Client approved DD report / confirmed instructions to proceed'
+      ]
+    },
+    {
+      id: 'spa', label: 'SPA', pct: 35,
+      blockers: isSeller ? [
+        'First draft SPA received from Buyer solicitors',
+        'SPA review report sent to client with advice on warranties and key terms',
+        'SPA agreed in principle / approved by all parties'
+      ] : [
+        'First draft SPA received from Seller solicitors / prepared for Buyer',
+        'SPA — client report and advice given (key risks, warranty position, price mechanics)',
+        'SPA negotiations completed'
+      ]
+    },
+    {
+      id: 'disclosure', label: 'Disclosure', pct: 50,
+      blockers: isSeller ? [
+        'Disclosure letter prepared by solicitor',
+        'Buyer approves disclosure letter in final agreed form',
+        'SPA approved in final agreed form'
+      ] : [
+        'Disclosure letter received from Seller solicitors',
+        'Disclosure letter agreed in final form',
+        'SPA in final agreed form'
+      ]
+    },
+    {
+      id: 'ancillaries', label: 'Ancillaries', pct: 65,
+      blockers: isSeller ? [
+        'All ancillary documents received from Buyer solicitors (board resolutions, STF, resignations, PSC docs, consents etc.)',
+        'Ancillaries agreed in final form'
+      ] : [
+        'Target board resolution approved by client',
+        'Buyer board resolution approved by client',
+        'Stock transfer form sent to Seller for execution',
+        'Resignation letter(s) approved by client',
+        'Consent to act approved by client',
+        'PSC cessation letter approved by client',
+        'PSC notification approved by client'
+      ]
+    },
+    {
+      id: 'execution', label: 'Execution', pct: 80,
+      blockers: isSeller ? [
+        'All signed documents received from client',
+        'Share certificates located and provided to solicitor'
+      ] : [
+        'Completion funds received into client account from Buyer',
+        'Signed SPA received from client',
+        'Signed buyer board resolution received',
+        'Signed PSC acceptance received',
+        'Signed stock transfer form received from Seller'
+      ]
+    },
+    {
+      id: 'completion', label: 'Completion', pct: 90,
+      blockers: isSeller ? [
+        'Sale proceeds received from Buyer solicitors into client account',
+        'Completion confirmed — all documents released / exchanged'
+      ] : [
+        'Completion funds transferred to Seller solicitors',
+        'Completion confirmed by Seller solicitors (funds received)'
+      ]
+    },
+    {
+      id: 'post-completion', label: 'Post-Completion', pct: 100,
+      blockers: isSeller ? [
+        'Sale proceeds sent to client (less agreed deductions)',
+        'Completion bible sent to client',
+        'File closed'
+      ] : [
+        'Companies House filings submitted (TM01, AP01, AD01)',
+        'Stamp duty paid on stock transfer form(s)',
+        'Completion bible sent to client',
+        'Stamped STF sent to client',
+        'File closed'
+      ]
+    }
+  ];
+}
 
-function getWorkflowState(checklist) {
+function getWorkflowState(checklist, role) {
+  const WORKFLOW_STAGES = getWorkflowStages(role || 'Buyer');
   // For each stage, check what % of its blockers are done in the checklist
   const stageStates = WORKFLOW_STAGES.map((stage, idx) => {
     const blockerStates = stage.blockers.map(blocker => {
@@ -692,13 +729,13 @@ function getWorkflowState(checklist) {
   let activeIdx = stageStates.findIndex(s => !s.allDone);
   if (activeIdx === -1) activeIdx = stageStates.length - 1;
 
-  const activePct = WORKFLOW_STAGES[activeIdx].pct;
+  const activePct = stageStates[activeIdx].pct;
   // Interpolate within the active stage
   const stage = stageStates[activeIdx];
   const doneFraction = stage.blockerStates.length > 0
     ? stage.blockerStates.filter(b => b.done).length / stage.blockerStates.length
     : 0;
-  const nextPct = activeIdx < WORKFLOW_STAGES.length - 1 ? WORKFLOW_STAGES[activeIdx + 1].pct : 100;
+  const nextPct = activeIdx < stageStates.length - 1 ? stageStates[activeIdx + 1].pct : 100;
   const pct = Math.round(activePct + doneFraction * (nextPct - activePct));
 
   return { stageStates, activeIdx, pct };
@@ -707,7 +744,8 @@ function getWorkflowState(checklist) {
 async function renderWorkflowBar(dealId) {
   let checklist = [];
   try { checklist = await loadChecklist(dealId) || []; } catch(e) {}
-  const { stageStates, activeIdx, pct } = getWorkflowState(checklist);
+  const role = currentDeal ? (currentDeal.client_role || 'Buyer') : 'Buyer';
+  const { stageStates, activeIdx, pct } = getWorkflowState(checklist, role);
   const activeStage = stageStates[activeIdx];
 
   // Build stage dots + connectors
@@ -735,6 +773,14 @@ async function renderWorkflowBar(dealId) {
   const canAdvance = activeStage.allDone && activeIdx < stageStates.length - 1;
   const isComplete = activeIdx === stageStates.length - 1 && activeStage.allDone;
 
+  // Sync progress % to deal record so dashboard card matches
+  try {
+    if (currentDeal && Math.abs((currentDeal.progress||0) - pct) > 2) {
+      await saveDeal({ ...currentDeal, progress: pct });
+      currentDeal.progress = pct;
+    }
+  } catch(e) {}
+
   return `
   <div class="workflow-bar">
     <div class="workflow-stages">${stagesHtml}</div>
@@ -758,6 +804,8 @@ async function renderWorkflowBar(dealId) {
 }
 
 async function advanceWorkflowStage(currentIdx) {
+  const role = currentDeal ? (currentDeal.client_role || 'Buyer') : 'Buyer';
+  const WORKFLOW_STAGES = getWorkflowStages(role);
   // Mark all incomplete blockers in checklist as complete for current stage
   const stage = WORKFLOW_STAGES[currentIdx];
   let checklist = [];
@@ -1133,15 +1181,16 @@ async function switchDealTab(tab, el) {
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Milestone</th><th>Expected Date</th><th>Status</th><th>Actual Date</th></tr></thead>
+        <thead><tr><th>Milestone</th><th>Expected Date</th><th>Status</th><th>Actual Date</th><th></th></tr></thead>
         <tbody>
         ${dates && dates.length ? dates.map(dt => `
-          <tr>
+          <tr style="cursor:pointer" onclick="openEditDate(${JSON.stringify(dt).replace(/"/g,'&quot;')})">
             <td style="color:var(--text)">${dt.milestone||'—'}</td>
-            <td style="color:#2C5282">${dt.expected_date ? formatDate(dt.expected_date) : '—'}</td>
-            <td><span class="badge badge-${dt.status==='Done'?'green':'amber'}">${dt.status||'Pending'}</span></td>
+            <td style="color:#2C5282">${dt.expected_date ? formatDate(dt.expected_date) : '<span style=\"color:var(--text3)\">— click to set</span>'}</td>
+            <td><span class="badge badge-${dt.status==='Done'?'green':dt.status==='Overdue'?'red':'amber'}">${dt.status||'Pending'}</span></td>
             <td style="color:var(--text3)">${dt.actual_date ? formatDate(dt.actual_date) : '—'}</td>
-          </tr>`).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:2rem">No critical dates added</td></tr>'}
+            <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();deleteDate('${dt.id}')">✕</button></td>
+          </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:2rem">No critical dates added</td></tr>'}
         </tbody>
       </table>
     </div>`;
@@ -2642,14 +2691,69 @@ async function submitAddDate() {
     : selected;
   if (!milestone || milestone === 'Custom…') { showNotif('Please enter a milestone name', 'error'); return; }
   try {
-    await sbFetch('critical_dates', { method: 'POST', body: JSON.stringify({
-      deal_id: currentDeal.id,
-      milestone,
+    // Check if this milestone already exists for this deal — if so, update it
+    const existing = await sbFetch(`critical_dates?deal_id=eq.${currentDeal.id}&milestone=eq.${encodeURIComponent(milestone)}`);
+    if (existing && existing.length > 0) {
+      const id = existing[0].id;
+      await sbFetch(`critical_dates?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({
+        expected_date: document.getElementById('dt-date').value || null,
+        actual_date: document.getElementById('dt-actual').value || null,
+        status: document.getElementById('dt-status').value || 'Pending'
+      })});
+      showNotif('Date updated', 'success');
+    } else {
+      await sbFetch('critical_dates', { method: 'POST', body: JSON.stringify({
+        deal_id: currentDeal.id,
+        milestone,
+        expected_date: document.getElementById('dt-date').value || null,
+        actual_date: document.getElementById('dt-actual').value || null,
+        status: document.getElementById('dt-status').value || 'Pending'
+      })});
+      showNotif('Date added', 'success');
+    }
+    closeModal(); switchDealTab('CriticalDates');
+  } catch(e) { showNotif('Error: ' + e.message, 'error'); }
+}
+
+function openEditDate(dt) {
+  openModal(`
+  <div class="modal-header"><div class="modal-title">Edit Date — ${dt.milestone}</div><button class="close-btn" onclick="closeModal()">✕</button></div>
+  <div class="modal-body">
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Expected Date</label><input class="form-input" id="dt-date" type="date" value="${dt.expected_date||''}"></div>
+      <div class="form-group"><label class="form-label">Actual Date</label><input class="form-input" id="dt-actual" type="date" value="${dt.actual_date||''}"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Status</label>
+      <select class="form-select" id="dt-status">
+        <option ${dt.status==='Pending'?'selected':''}>Pending</option>
+        <option ${dt.status==='Done'?'selected':''}>Done</option>
+        <option ${dt.status==='Overdue'?'selected':''}>Overdue</option>
+        <option ${dt.status==='Extended'?'selected':''}>Extended</option>
+      </select>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-primary" onclick="saveEditDate('${dt.id}')">Save</button>
+  </div>`);
+}
+
+async function saveEditDate(id) {
+  try {
+    await sbFetch(`critical_dates?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({
       expected_date: document.getElementById('dt-date').value || null,
       actual_date: document.getElementById('dt-actual').value || null,
       status: document.getElementById('dt-status').value || 'Pending'
     })});
-    closeModal(); switchDealTab('CriticalDates'); showNotif('Date added', 'success');
+    closeModal(); switchDealTab('CriticalDates'); showNotif('Date updated', 'success');
+  } catch(e) { showNotif('Error: ' + e.message, 'error'); }
+}
+
+async function deleteDate(id) {
+  if (!confirm('Remove this date?')) return;
+  try {
+    await sbFetch(`critical_dates?id=eq.${id}`, { method: 'DELETE' });
+    switchDealTab('CriticalDates'); showNotif('Date removed', 'success');
   } catch(e) { showNotif('Error: ' + e.message, 'error'); }
 }
 
