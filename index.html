@@ -580,7 +580,13 @@ async function deleteParty(id) {
   return sbFetch(`parties?id=eq.${id}`, { method: 'DELETE' });
 }
 async function loadSignatures(dealId) {
-  return sbFetch(`signatures?deal_id=eq.${dealId}&select=id,deal_id,signatory_name,document_name,party,signed,signed_at&order=created_at.asc`) || [];
+  try {
+    const result = await sbFetch(`signatures?deal_id=eq.${dealId}&select=id,deal_id,signatory_name,document_name,party,signed,signed_at`);
+    return result || [];
+  } catch(e) {
+    console.error('loadSignatures error:', e);
+    return [];
+  }
 }
 async function loadActivityLog(dealId) {
   return sbFetch(`activity_log?deal_id=eq.${dealId}&order=created_at.desc&limit=30`) || [];
@@ -865,6 +871,14 @@ function navigate(view, data = null) {
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   const navEl = document.getElementById(`nav-${view}`);
   if (navEl) navEl.classList.add('active');
+  // Persist state so page refresh returns to same view
+  try {
+    if (view === 'deal' && data) {
+      localStorage.setItem('hub_state', JSON.stringify({ view, dealId: data.id }));
+    } else {
+      localStorage.setItem('hub_state', JSON.stringify({ view }));
+    }
+  } catch(e) {}
 
   const actions = document.getElementById('topbar-actions');
   actions.innerHTML = '';
@@ -3190,7 +3204,26 @@ document.addEventListener('click', (e) => {
 // INIT
 // ═══════════════════════════════════════════════════════
 loadConfig();
-navigate('dashboard');
+
+// Restore last view on page refresh
+async function restoreState() {
+  try {
+    const saved = localStorage.getItem('hub_state');
+    if (saved) {
+      const state = JSON.parse(saved);
+      if (state.view === 'deal' && state.dealId) {
+        await loadDeals();
+        const deal = deals.find(d => d.id === state.dealId);
+        if (deal) { navigate('deal', deal); return; }
+      } else if (state.view && state.view !== 'deal') {
+        navigate(state.view); return;
+      }
+    }
+  } catch(e) {}
+  navigate('dashboard');
+}
+restoreState();
+
 // Check deadlines after a short delay to let config load
 setTimeout(checkDeadlines, 1500);
 // Re-check every 30 minutes
