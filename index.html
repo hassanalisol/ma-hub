@@ -549,6 +549,23 @@ async function handleDocUpload(input) {
   }
 }
 
+async function deleteDocument(id, storagePath) {
+  if (!confirm('Delete this document? This cannot be undone.')) return;
+  try {
+    // Delete from storage if it has a path
+    if (storagePath) {
+      await fetch(`${config.supabaseUrl}/storage/v1/object/deal-documents/${storagePath}`, {
+        method: 'DELETE',
+        headers: { 'apikey': config.supabaseKey, 'Authorization': `Bearer ${config.supabaseKey}` }
+      });
+    }
+    // Delete from documents table
+    await sbFetch(`documents?id=eq.${id}`, { method: 'DELETE' });
+    switchDealTab('Documents');
+    showNotif('Document deleted', 'success');
+  } catch(e) { showNotif('Error: ' + e.message, 'error'); }
+}
+
 async function downloadStoredDoc(storagePath, name) {
   try {
     const url = `${config.supabaseUrl}/storage/v1/object/deal-documents/${storagePath}`;
@@ -1167,7 +1184,10 @@ async function switchDealTab(tab, el) {
             <td style="font-family:var(--font-mono);font-size:12px;color:var(--accent)">${doc.version||'—'}</td>
             <td><span class="badge badge-${doc.status==='Final'||doc.status==='Executed'?'green':doc.status==='Agreed'?'blue':'amber'}">${doc.status||'Draft'}</span></td>
             <td style="color:var(--text3)">${doc.date ? formatDate(doc.date) : '—'}</td>
-            <td>${doc.storage_path ? `<button class="btn btn-ghost btn-sm" onclick="downloadStoredDoc('${doc.storage_path}','${doc.name}')">↓</button>` : ''}</td>
+            <td style="display:flex;gap:6px;align-items:center">
+              ${doc.storage_path ? `<button class="btn btn-ghost btn-sm" onclick="downloadStoredDoc('${doc.storage_path}','${doc.name}')" title="Download">↓</button>` : ''}
+              <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteDocument('${doc.id}','${doc.storage_path||''}')" title="Delete">✕</button>
+            </td>
           </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:2rem">No documents yet — upload or log one</td></tr>'}
         </tbody>
       </table>
