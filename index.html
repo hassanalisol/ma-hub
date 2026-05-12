@@ -1386,6 +1386,7 @@ function renderAITab() {
           {id:'stf', label:'Stock Transfer Form', icon:'📋'},
           {id:'target_sole', label:'Target Board (Sole Director)', icon:'📄'},
           {id:'target_mom', label:'Target Board Minutes (Multiple Directors)', icon:'📄'},
+          {id:'seller_mom', label:'Seller Board Minutes (Multiple Directors)', icon:'📄'},
           {id:'buyer_mom', label:'Buyer Board Minutes', icon:'📄'},
           {id:'dir_resignation', label:'Director Resignation Letter', icon:'✉️'},
           {id:'psc_outgoing', label:'Outgoing PSC Letter', icon:'📩'},
@@ -2213,34 +2214,27 @@ async function loadChecklistTemplate(role) {
 function getBuyerChecklist() {
   return [
     // CLIENT ONBOARDING
-    { milestone: 'Engagement letter / client care letter sent to client', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
-    { milestone: 'Engagement letter / client care letter signed and returned', category: 'Client Onboarding', responsible: 'Client', completed: false },
     { milestone: 'Conflict check completed', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
     { milestone: 'AML / KYC checks completed for client', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
-    { milestone: 'AML / KYC checks completed for beneficial owners / UBOs', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
     { milestone: 'Source of funds — initial enquiry made with client', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
-    { milestone: 'Source of funds — evidence received and reviewed', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
+    { milestone: 'Source of funds — reviewed or deferred', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
     { milestone: 'Client authorised to give instructions (board authority confirmed if corporate buyer)', category: 'Client Onboarding', responsible: 'Client', completed: false },
-    { milestone: 'Fee estimate / costs agreed with client', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
     // PRE-TRANSACTION
-    { milestone: 'Instructions confirmed in writing with client', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
     { milestone: 'Seller solicitors identified and details confirmed', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
-    { milestone: 'HOTs received from Seller / Seller solicitors', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'HOTs received from Seller or sent to Seller', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
     { milestone: 'HOTs reviewed and reported to client', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
     { milestone: 'HOTs negotiated (if required)', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
     { milestone: 'HOTs agreed by all parties', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
     { milestone: 'Confidentiality / NDA agreement reviewed and signed', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
     { milestone: 'Exclusivity agreement reviewed and signed', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
-    { milestone: 'Transaction structure advice given to client (share vs asset; tax considerations)', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
-    { milestone: 'Client accountants / tax advisers instructed (if applicable)', category: 'Pre-Transaction', responsible: 'Client', completed: false },
     { milestone: 'W&I insurance — client advised and decision made', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
-    // COMPANY SEARCHES
-    { milestone: 'Companies House search on Target', category: 'Company Searches', responsible: 'Solicitor', completed: false },
-    { milestone: 'Target registered charges search (Companies House / Land Charges)', category: 'Company Searches', responsible: 'Solicitor', completed: false },
-    { milestone: 'Insolvency search on Target company and directors', category: 'Company Searches', responsible: 'Solicitor', completed: false },
-    { milestone: 'Litigation search / court judgments search on Target', category: 'Company Searches', responsible: 'Solicitor', completed: false },
-    { milestone: 'Trade mark and IP searches (if applicable)', category: 'Company Searches', responsible: 'Solicitor', completed: false },
-    { milestone: 'Search results reviewed and reported to client', category: 'Company Searches', responsible: 'Solicitor', completed: false },
+    // COMPANY SEARCHES / PRE-DD SELF CHECK
+    { milestone: 'Companies House search on Target', category: 'Company Searches / Pre-DD', responsible: 'Solicitor', completed: false },
+    { milestone: 'Target registered charges search (Companies House / Land Charges)', category: 'Company Searches / Pre-DD', responsible: 'Solicitor', completed: false },
+    { milestone: 'Insolvency search on Target company and directors', category: 'Company Searches / Pre-DD', responsible: 'Solicitor', completed: false },
+    { milestone: 'Litigation search / court judgments search on Target', category: 'Company Searches / Pre-DD', responsible: 'Solicitor', completed: false },
+    { milestone: 'Trade mark and IP searches (if applicable)', category: 'Company Searches / Pre-DD', responsible: 'Solicitor', completed: false },
+    { milestone: 'Search results reviewed and reported to client', category: 'Company Searches / Pre-DD', responsible: 'Solicitor', completed: false },
     // DUE DILIGENCE
     { milestone: 'Legal due diligence questionnaire (LDDQ) sent to Seller solicitors', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
     { milestone: 'Data room / VDR access obtained', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
@@ -2249,8 +2243,7 @@ function getBuyerChecklist() {
     { milestone: 'Material contracts reviewed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
     { milestone: 'Change of control provisions identified and reported', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
     { milestone: 'Key contracts — consent requirements identified', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
-    { milestone: 'Employment contracts and TUPE position reviewed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
-    { milestone: 'TUPE obligations reported to client', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Employment contracts', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
     { milestone: 'Pension scheme — type identified and obligations confirmed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
     { milestone: 'IP ownership confirmed (patents, trade marks, domain names, software)', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
     { milestone: 'IT / data review — GDPR data processor agreements reviewed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
@@ -2266,16 +2259,11 @@ function getBuyerChecklist() {
     { milestone: 'Follow-up DD questions raised with Seller', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
     { milestone: 'Follow-up DD responses received and reviewed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
     // SPA NEGOTIATION
-    { milestone: 'First draft SPA prepared and sent to Seller solicitors', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
-    { milestone: 'SPA reviewed and amendments marked up', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
-    { milestone: 'SPA — client report and advice given (key risks, warranty position, price mechanics)', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
-    { milestone: 'Client instructions received on SPA negotiating position', category: 'SPA Negotiation', responsible: 'Client', completed: false },
+    { milestone: 'SPA drafted V1', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
+    { milestone: 'SPA sent to client for approval', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
+    { milestone: 'SPA sent to Seller', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
     { milestone: 'SPA — negotiations conducted (all rounds)', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
-    { milestone: 'Completion mechanism agreed (locked box vs completion accounts)', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
-    { milestone: 'Warranty and indemnity schedule negotiated', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
-    { milestone: 'Tax covenant / tax deed reviewed and negotiated', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
-    { milestone: 'Conditions precedent agreed', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
-    { milestone: 'Restrictive covenants / non-compete provisions agreed', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
+    { milestone: 'Service agreements / consultancy agreements negotiated (if applicable)', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
     { milestone: 'Service agreements / consultancy agreements negotiated (if applicable)', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
     { milestone: 'SPA negotiations completed', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
     // DISCLOSURE LETTER
@@ -2290,68 +2278,62 @@ function getBuyerChecklist() {
     { milestone: 'Client given final SPA and DL for approval before signing', category: 'Disclosure Letter', responsible: 'Solicitor', completed: false },
     { milestone: 'Client confirmed approval of final SPA and DL', category: 'Disclosure Letter', responsible: 'Client', completed: false },
     // ANCILLARIES
-    { milestone: 'Target board resolution drafted (to approve share transfer, register new shareholders, appoint/remove directors)', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
-    { milestone: 'Target board resolution approved by client', category: 'Ancillaries', responsible: 'Client', completed: false },
-    { milestone: 'Buyer board resolution drafted (to approve acquisition and execution of SPA)', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    { milestone: 'Target board resolution drafted', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    { milestone: 'Target board resolution sent to Seller', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    { milestone: 'Buyer board resolution drafted (if required)', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
     { milestone: 'Buyer board resolution approved by client', category: 'Ancillaries', responsible: 'Client', completed: false },
     { milestone: 'Stock transfer form(s) (J30) drafted', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
     { milestone: 'Stock transfer form sent to Seller for execution', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
     { milestone: 'Resignation letter(s) for outgoing directors drafted', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
-    { milestone: 'Resignation letter(s) approved by client', category: 'Ancillaries', responsible: 'Client', completed: false },
     { milestone: 'Consent to act for incoming director(s) drafted', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
-    { milestone: 'Consent to act approved by client', category: 'Ancillaries', responsible: 'Client', completed: false },
-    { milestone: 'PSC cessation notification (PSC07 / confirmation statement update) drafted', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    { milestone: 'PSC cessation notification drafted', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
     { milestone: 'PSC cessation letter approved by client', category: 'Ancillaries', responsible: 'Client', completed: false },
     { milestone: 'PSC notification for incoming PSC drafted', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
     { milestone: 'PSC notification approved by client', category: 'Ancillaries', responsible: 'Client', completed: false },
     { milestone: 'Indemnity for lost share certificate drafted (if applicable)', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
-    { milestone: 'Indemnity for lost share certificate approved by client (if applicable)', category: 'Ancillaries', responsible: 'Client', completed: false },
-    { milestone: 'New share certificates to be issued — confirmed with client', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    { milestone: 'New share certificates to be issued', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
     { milestone: 'Shareholders agreement / investment agreement drafted (if applicable)', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
     { milestone: 'Shareholders agreement approved by client (if applicable)', category: 'Ancillaries', responsible: 'Client', completed: false },
-    { milestone: 'Completion agenda / bible index prepared', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    { milestone: 'New Articles of Association drafted (if applicable)', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    { milestone: 'AoA approved by Buyer (if applicable)', category: 'Ancillaries', responsible: 'Client', completed: false },
+    { milestone: 'Ancillaries sent to Seller', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
     // PRE-COMPLETION & EXECUTION
     { milestone: 'Conditions precedent — satisfaction confirmed (if applicable)', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
     { milestone: 'Source of funds evidence obtained and verified pre-completion', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
-    { milestone: 'Completion funds received into client account from Buyer', category: 'Pre-Completion & Execution', responsible: 'Client', completed: false },
     { milestone: 'SPA execution copy sent to client', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
     { milestone: 'Disclosure letter execution copy sent to client', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
-    { milestone: 'All ancillary documents sent to client for execution', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
+    { milestone: 'All relevant ancillary documents sent to client for execution', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
     { milestone: 'Signed SPA received from client', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
     { milestone: 'Signed buyer board resolution received', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
     { milestone: 'Signed PSC acceptance received', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
     { milestone: 'Signed director consent to act received', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
-    { milestone: 'Signed stock transfer form received from Seller', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
-    { milestone: 'Signed resignation letters received from outgoing directors', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
-    { milestone: 'Target share certificates obtained from Seller (or indemnity in place)', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
-    { milestone: 'Completion funds transfer instructions confirmed with client', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
+    { milestone: 'Completion funds received into client account from Buyer', category: 'Pre-Completion & Execution', responsible: 'Client', completed: false },
+    { milestone: 'Firm fees and disbursements received', category: 'Pre-Completion & Execution', responsible: 'Client', completed: false },
+    { milestone: 'Stamp Duty fees received', category: 'Pre-Completion & Execution', responsible: 'Client', completed: false },
     // COMPLETION
     { milestone: 'Completion agenda circulated to all parties', category: 'Completion', responsible: 'Solicitor', completed: false },
     { milestone: 'Completion meeting held (virtual or in person)', category: 'Completion', responsible: 'Solicitor', completed: false },
     { milestone: 'Completion funds transferred to Seller solicitors', category: 'Completion', responsible: 'Solicitor', completed: false },
     { milestone: 'Completion confirmed by Seller solicitors (funds received)', category: 'Completion', responsible: 'Solicitor', completed: false },
     { milestone: 'Client notified that completion has occurred', category: 'Completion', responsible: 'Solicitor', completed: false },
-    // POST-COMPLETION
-    { milestone: 'Companies House — TM01 filed (removal of outgoing directors)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'Companies House — AP01 filed (appointment of incoming directors)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'Companies House — AD01 filed (change of registered office, if applicable)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'Companies House — PSC register updated (CH filing)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'Companies House — confirmation statement updated / filed', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'Stamp duty — SDLT / Stamp Duty reserve calculated and confirmed with accountants', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'Stamp duty paid on stock transfer form(s) (within 30 days)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'STF and stamp duty payment receipt submitted to HMRC (or CREST where applicable)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'Stamped STF received from HMRC', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'Target share register updated to reflect new shareholder(s)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'New share certificate(s) issued to Buyer', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'Stamped STF sent to client', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'New share certificate(s) sent to client', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'Completion bible / closing bible prepared (all executed documents collated)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'Completion bible sent to client', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'Completion bible sent to Seller solicitors', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'W&I insurance policy issued and copy sent to client (if applicable)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'Client notified of post-completion obligations (deferred consideration, warranty periods, etc.)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'File review and archiving', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
-    { milestone: 'File closed', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    // POST-COMPLETION PARTIES
+    { milestone: 'Completion bible / closing bible prepared (all executed documents collated)', category: 'Post-Completion Parties', responsible: 'Solicitor', completed: false },
+    { milestone: 'Completion bible sent to client', category: 'Post-Completion Parties', responsible: 'Solicitor', completed: false },
+    { milestone: 'Completion bible sent to Seller solicitors', category: 'Post-Completion Parties', responsible: 'Solicitor', completed: false },
+    { milestone: 'W&I insurance policy issued and copy sent to client (if applicable)', category: 'Post-Completion Parties', responsible: 'Solicitor', completed: false },
+    // POST-COMPLETION FORMALITIES
+    { milestone: 'Companies House — TM01 filed (removal of outgoing directors)', category: 'Post-Completion Formalities', responsible: 'Solicitor', completed: false },
+    { milestone: 'Companies House — AP01 filed (appointment of incoming directors)', category: 'Post-Completion Formalities', responsible: 'Solicitor', completed: false },
+    { milestone: 'Companies House — AD01 filed (change of registered office, if applicable)', category: 'Post-Completion Formalities', responsible: 'Solicitor', completed: false },
+    { milestone: 'Companies House — PSC register updated (CH filing)', category: 'Post-Completion Formalities', responsible: 'Solicitor', completed: false },
+    { milestone: 'Companies House — confirmation statement updated / filed', category: 'Post-Completion Formalities', responsible: 'Solicitor', completed: false },
+    { milestone: 'New AoA filed with Companies House', category: 'Post-Completion Formalities', responsible: 'Solicitor', completed: false },
+    { milestone: 'Stamp duty paid to HMRC (within 30 days)', category: 'Post-Completion Formalities', responsible: 'Solicitor', completed: false },
+    { milestone: 'STF and stamp duty payment receipt submitted to HMRC (or CREST where applicable)', category: 'Post-Completion Formalities', responsible: 'Solicitor', completed: false },
+    { milestone: 'Stamped STF received from HMRC', category: 'Post-Completion Formalities', responsible: 'Solicitor', completed: false },
+    { milestone: 'Stamped STF sent to client', category: 'Post-Completion Formalities', responsible: 'Solicitor', completed: false },
+    { milestone: 'File review and archiving', category: 'Post-Completion Formalities', responsible: 'Solicitor', completed: false },
+    { milestone: 'File closed', category: 'Post-Completion Formalities', responsible: 'Solicitor', completed: false },
   ];
 }
 
@@ -3303,6 +3285,7 @@ async function generateAncillary(type) {
       case 'target_sole': result = await generateTargetSoleDir(d); break;
       case 'target_mom': result = await generateTargetMoM(d); break;
       case 'buyer_mom': result = await generateBuyerMoM(d); break;
+      case 'seller_mom': result = await generateSellerMoM(d); break;
       case 'dir_resignation': result = await generateDirResignation(d); break;
       case 'psc_outgoing': result = await generatePSCOutgoing(d); break;
       case 'psc_rle': result = await generateRLE(d); break;
@@ -3338,7 +3321,7 @@ async function generateAncillary(type) {
 }
 
 async function generateAllAncillaries() {
-  const types = ['stf','target_sole','buyer_mom','dir_resignation','psc_outgoing','psc_rle','indemnity','bible_index'];
+  const types = ['stf','target_sole','target_mom','seller_mom','buyer_mom','dir_resignation','psc_outgoing','psc_rle','indemnity','bible_index'];
   document.getElementById('ancillary-results').innerHTML = '';
   for (const t of types) {
     await generateAncillary(t);
@@ -3622,7 +3605,86 @@ Date`;
   return { name: 'Buyer Board Minutes', filename: `Buyer_Board_Minutes_${d.buyerName.replace(/\s/g,'_')}.txt`, content };
 }
 
-async function generateDirResignation(d) {
+async function generateSellerMoM(d) {
+  const content = `${d.sellerName}
+(the "Company")
+
+Minutes of the meeting of the board of directors of the Company held at the registered office address on ${d.completionDate} at _________ am/pm
+
+PRESENT
+
+| NAME | POSITION |
+|------|----------|
+|      |          |
+|      |          |
+
+CHAIR
+
+[Chair] was appointed chair of the meeting and chaired the meeting throughout.
+
+NOTICE AND QUORUM
+
+The chair reported that due notice of the meeting had been given to all persons entitled to receive it and that a quorum was present. Accordingly, the chair declared the meeting open.
+
+DECLARATIONS OF INTEREST
+
+The following directors declared the nature and extent of their interest in the proposed transaction and other arrangements to be considered at the meeting in accordance with the requirements of section 177 of the Companies Act 2006 and the Company's articles of association, as follows:
+
+| NAME | NATURE AND EXTENT OF INTEREST |
+|------|-------------------------------|
+|      |                               |
+
+It was noted that pursuant to the Company's articles of association a director may vote and form part of the quorum in relation to any proposed transaction or arrangement in which they are interested, and that there would be a quorum for all items of business to be transacted at the meeting.
+
+BUSINESS OF THE MEETING
+
+The chair reported that by a share purchase agreement dated ${d.completionDate} (the "SPA") made between the Company and ${d.buyerName} (the "Buyer"), the Company had agreed to sell and the Buyer had agreed to purchase (the "Transaction") the entire issued share capital of ${d.targetCompany} (the "Target").
+
+The chair further reported that the business of the meeting was to consider, and if thought fit, approve:
+
+(a) completion of the Transaction in accordance with the terms of the SPA (Completion); and
+
+(b) the execution by the Company of certain documents relating to the Transaction and the delivery of those documents to the Buyer on Completion.
+
+TABLING AND CONSIDERATION OF DOCUMENTS
+
+There were produced to the meeting the engrossments of the following documents (together the "Completion Documents"):
+
+(a) the SPA;
+
+(b) a stock transfer form transferring the entire issued share capital (the "Sale Shares") in the Target from the Company to the Buyer; and
+
+(c) a letter from the Company to the Target confirming that, with effect from Completion, it will cease to be a registrable relevant legal entity (within the meaning of section 790C of the Companies Act 2006) in relation to the Target.
+
+RESOLUTIONS
+
+Having carefully considered each of the Completion Documents, the directors confirmed that the conditions to Completion were satisfied and IT WAS RESOLVED to proceed to Completion.
+
+After careful consideration of the Completion Documents, IT WAS RESOLVED:
+
+(a) to approve the terms of each Completion Document;
+
+(b) that any director (and, where execution as a deed is required, any two directors or any one director in the presence of a witness who attests their signature) be and is hereby authorised to execute and deliver each Completion Document for and on behalf of the Company; and
+
+(c) to authorise each director of the Company to do all such acts and things and execute for and on behalf of the Company all such other documents, deeds, certificates or notices as they consider necessary or desirable in connection with the Transaction.
+
+FILING AND ADMINISTRATION
+
+The chair instructed one of the directors to make all necessary and appropriate entries in the books and registers of the Company and arrange for any necessary forms and documents to be filed with the Registrar of Companies.
+
+CLOSE
+
+There was no further business and the chair declared the meeting closed.
+
+
+________________
+Chair
+
+_________________
+Date`;
+
+  return { name: 'Seller Board Minutes (Multiple Directors)', filename: `Seller_Board_Minutes_${d.targetCompany.replace(/\s/g,'_')}.txt`, content };
+}
   const content = `To:    The Directors
 
 ${d.targetCompany} (the "Company")
