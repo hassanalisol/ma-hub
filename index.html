@@ -1746,6 +1746,8 @@ async function runSPAExtraction() {
   "targetDirectors": [{"name": "director name", "resigning": true/false, "incoming": true/false}],
   "targetSoleDirector": true/false,
   "targetNewRegisteredOffice": "new registered office address if stated",
+  "outgoingDirector": "full name of the outgoing/resigning director",
+  "incomingDirector": "full name of the incoming/new director",
   "buyerName": "buyer name",
   "buyerType": "Company or Individual",
   "buyerCompanyNumber": "buyer company number if company",
@@ -1767,7 +1769,11 @@ async function runSPAExtraction() {
   "settlementAgreements": ["parties to settlement agreements"]
 }
 
-IMPORTANT — Directors: Look for any person labelled or described as "Outgoing Director" or "resigning director" and set resigning:true. Look for any person labelled or described as "Incoming Director" or "new director" or "incoming director" and set incoming:true in targetDirectors AND include in newDirectors. These labels may appear in square brackets e.g. [Outgoing Director] or [Incoming Director].
+CRITICAL — Directors:
+- Look for the label "[Outgoing Director]" or "Outgoing Director" — the ACTUAL PERSON'S NAME next to or associated with this label is the outgoingDirector value
+- Look for the label "[Incoming Director]" or "Incoming Director" — the ACTUAL PERSON'S NAME next to or associated with this label is the incomingDirector value
+- Also populate targetDirectors array: set resigning:true for outgoing, incoming:true for incoming
+- newDirectors array should contain the incoming director name
 
 Return ONLY the JSON.
 
@@ -3466,9 +3472,9 @@ async function collectDealData() {
     sellerName: spa.sellers?.[0]?.name || seller?.name || '[Seller]',
     sellerAddress: seller?.email || '[Seller Address]',
     sellers: spa.sellers || [],
-    // Directors
-    outgoingDirector: outDir?.name || spa.targetDirectors?.find(d=>d.resigning)?.name || '[Outgoing Director]',
-    incomingDirector: inDir?.name || spa.newDirectors?.[0] || '[Incoming Director]',
+    // Directors — check parties tab first, then SPA data
+    outgoingDirector: outDir?.name || spa.targetDirectors?.find(d=>d.resigning===true)?.name || spa.outgoingDirector || '[Outgoing Director]',
+    incomingDirector: inDir?.name || spa.newDirectors?.[0] || spa.targetDirectors?.find(d=>d.incoming===true)?.name || spa.incomingDirector || '[Incoming Director]',
     // Share details
     numberOfShares: spa.totalShares || '[Number of Shares]',
     numberOfSharesWords: spa.totalSharesWords || '[Number of Shares in Words]',
@@ -3517,6 +3523,10 @@ async function generateAncillary(type) {
 
     // Add to results
     const existing = resultsEl.innerHTML === '' ? '' : resultsEl.innerHTML;
+    const b64 = result.blob
+      ? btoa(String.fromCharCode(...new Uint8Array(await result.blob.arrayBuffer())))
+      : btoa(encodeURIComponent(result.content));
+    const isBlob = !!result.blob;
     resultsEl.innerHTML = existing + `
     <div class="generated-doc" style="margin-bottom:8px">
       <div class="generated-doc-info">
@@ -3527,7 +3537,7 @@ async function generateAncillary(type) {
         </div>
       </div>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-primary btn-sm" onclick="downloadAncillary('${result.filename}','${btoa(encodeURIComponent(result.content))}')">↓ Download</button>
+        <button class="btn btn-primary btn-sm" onclick="downloadAncillary('${result.filename}','${b64}',${isBlob})">↓ Download</button>
       </div>
     </div>`;
 
@@ -3549,50 +3559,273 @@ async function generateAllAncillaries() {
   showNotif('All ancillaries generated', 'success');
 }
 
-function downloadAncillary(filename, b64content) {
-  const text = decodeURIComponent(atob(b64content));
-  downloadAsDocx(text, filename);
+function downloadAncillary(filename, b64content, isBlob) {
+  if (isBlob) {
+    // Direct blob download (e.g. STF)
+    const bytes = Uint8Array.from(atob(b64content), c => c.charCodeAt(0));
+    const blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    a.click(); URL.revokeObjectURL(url);
+  } else {
+    const text = decodeURIComponent(atob(b64content));
+    downloadAsDocx(text, filename);
+  }
 }
 
 // ── TEMPLATE FUNCTIONS ──
 // Each returns { name, filename, content } as plain text (formatted for Word paste or .txt)
 
 async function generateSTF(d) {
-  const content = `STOCK TRANSFER FORM
-Transfer by individual
+  // Build the STF as a proper docx matching the J30 template exactly
+  const lib = await loadDocxLib();
+  const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+          AlignmentType, BorderStyle, WidthType, ShadingType } = lib;
 
-Consideration money: ${d.purchasePrice}
+  const bdr = { style: BorderStyle.SINGLE, size: 4, color: '000000' };
+  const borders = { top: bdr, bottom: bdr, left: bdr, right: bdr };
+  const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
+  const noBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
+  const cellPad = { top: 80, bottom: 80, left: 100, right: 100 };
+  const W = 9026; // A4 content width DXA
 
-Name of undertaking: ${d.targetCompany} (company number: ${d.targetCompanyNumber})
+  const cell = (text, opts = {}) => new TableCell({
+    borders: opts.noBorder ? noBorders : borders,
+    width: opts.width ? { size: opts.width, type: WidthType.DXA } : undefined,
+    columnSpan: opts.span,
+    margins: cellPad,
+    children: [new Paragraph({
+      children: [new TextRun({ text: text || '', font: 'Arial', size: 18, bold: opts.bold })],
+      alignment: opts.center ? AlignmentType.CENTER : AlignmentType.LEFT
+    })]
+  });
 
-Description of security: ${d.shareClass} shares of £${d.nominalValue} each
+  const row = (...cells) => new TableRow({ children: cells });
+  const tbl = (rows, widths) => new Table({
+    width: { size: W, type: WidthType.DXA },
+    columnWidths: widths,
+    rows
+  });
 
-Number of shares: ${d.numberOfSharesWords} (${d.numberOfShares} units of £${d.nominalValue})
+  const sellers = d.sellers && d.sellers.length > 1
+    ? d.sellers.map(s => s.name).join('\n')
+    : d.sellerName;
 
-In the name(s) of: ${d.sellerName}
-${d.sellerAddress}
+  const doc = new Document({
+    styles: { default: { document: { run: { font: 'Arial', size: 18 } } } },
+    sections: [{
+      properties: {
+        page: {
+          size: { width: 11906, height: 16838 },
+          margin: { top: 720, right: 720, bottom: 720, left: 720 }
+        }
+      },
+      children: [
 
-I/we transfer the above security out of the name(s) stated above to the person(s) named below:
+        // Title row
+        tbl([
+          row(
+            cell('Stock transfer form   Transfer by individual', { bold: true, span: 2 }),
+            cell('Above this line for Registrars only')
+          )
+        ], [5000, 1, 4025]),
 
-Transferee: ${d.buyerName}
-${d.buyerAddress}
+        new Paragraph({ spacing: { after: 0 } }),
 
-Signature(s) of transferor(s):
+        // Main form table
+        tbl([
+          row(
+            cell(`Consideration money: ${d.purchasePrice}`, { width: 4500 }),
+            cell('Certificate lodged with the Registrar\n(For completion by the Registrar/Stock Exchange)', { width: 4526 })
+          ),
+          row(
+            cell('Name of undertaking.', { width: 4500 }),
+            cell(`${d.targetCompany} (company number: ${d.targetCompanyNumber})`, { bold: true, width: 4526 })
+          ),
+          row(
+            cell('Description of security.', { width: 4500 }),
+            cell(`${d.shareClass} shares of £${d.nominalValue} each`, { width: 4526 })
+          ),
+          new TableRow({
+            children: [
+              new TableCell({
+                borders,
+                width: { size: 4500, type: WidthType.DXA },
+                rowSpan: 2,
+                margins: cellPad,
+                children: [new Paragraph({ children: [new TextRun({ text: 'Number or amount of Shares, Stock or other security and, in figures column only, number and denomination of units, if any.', font: 'Arial', size: 18 })] })]
+              }),
+              new TableCell({ borders, width: { size: 1500, type: WidthType.DXA }, margins: cellPad, children: [new Paragraph({ children: [new TextRun({ text: 'Words', font: 'Arial', size: 18 })] })] }),
+              new TableCell({ borders, width: { size: 1513, type: WidthType.DXA }, margins: cellPad, children: [new Paragraph({ children: [new TextRun({ text: d.numberOfSharesWords || '[Number of Shares in Words]', font: 'Arial', size: 18 })] })] }),
+              new TableCell({ borders, width: { size: 1513, type: WidthType.DXA }, margins: cellPad, children: [new Paragraph({ children: [new TextRun({ text: 'Figures', font: 'Arial', size: 18 })] })] })
+            ]
+          }),
+          new TableRow({
+            children: [
+              new TableCell({ borders, width: { size: 1500, type: WidthType.DXA }, margins: cellPad, children: [new Paragraph({ children: [new TextRun({ text: '', font: 'Arial', size: 18 })] })] }),
+              new TableCell({ borders, width: { size: 1513, type: WidthType.DXA }, margins: cellPad, children: [new Paragraph({ children: [new TextRun({ text: '', font: 'Arial', size: 18 })] })] }),
+              new TableCell({ borders, width: { size: 1513, type: WidthType.DXA }, margins: cellPad, children: [new Paragraph({ children: [new TextRun({ text: `(${d.numberOfShares || ''} units of £${d.nominalValue})`, font: 'Arial', size: 18 })] })] })
+            ]
+          }),
+          new TableRow({
+            children: [
+              new TableCell({
+                borders, rowSpan: 2, width: { size: 4500, type: WidthType.DXA }, margins: cellPad,
+                children: [new Paragraph({ children: [new TextRun({ text: 'Name and address of registered holder should be given in full.', font: 'Arial', size: 18 })] })]
+              }),
+              new TableCell({
+                borders, columnSpan: 2, width: { size: 3026, type: WidthType.DXA }, margins: cellPad,
+                children: [
+                  new Paragraph({ children: [new TextRun({ text: `In the name(s) of ${sellers}`, font: 'Arial', size: 18, bold: true })] }),
+                  new Paragraph({ children: [new TextRun({ text: d.sellerAddress || '', font: 'Arial', size: 18 })] })
+                ]
+              }),
+              new TableCell({ borders, width: { size: 1500, type: WidthType.DXA }, margins: cellPad, children: [new Paragraph({ children: [new TextRun({ text: 'Account Designation (if any)', font: 'Arial', size: 18 })] })] })
+            ]
+          }),
+          new TableRow({
+            children: [
+              new TableCell({ borders, columnSpan: 2, width: { size: 3026, type: WidthType.DXA }, margins: cellPad, children: [new Paragraph({ children: [new TextRun({ text: '', font: 'Arial', size: 18 })] })] }),
+              new TableCell({ borders, width: { size: 1500, type: WidthType.DXA }, margins: cellPad, children: [new Paragraph({ children: [new TextRun({ text: '', font: 'Arial', size: 18 })] })] })
+            ]
+          }),
+        ], [4500, 1500, 1513, 1513]),
 
-1. _________________________ Date: _______________
+        new Paragraph({ spacing: { after: 80 } }),
 
-I/We request that such entries be made in the register as are necessary to give effect to this transfer.
+        // Transfer statement
+        tbl([
+          row(
+            new TableCell({
+              borders,
+              columnSpan: 2,
+              margins: cellPad,
+              children: [new Paragraph({ children: [new TextRun({ text: 'I/we transfer the above security out of the name(s) stated above to the person(s) named below or to the several persons named in Parts 2 of Brokers Transfer forms relating to the above security: Delete words in italics except for stock exchange transactions.', font: 'Arial', size: 18 })] })]
+            }),
+            cell('Stamp of Selling Broker(s) or, for transactions which are not stock exchange transactions, of Agent(s), if any, acting for the Transferor(s)')
+          )
+        ], [5500, 3526]),
 
----
-CERTIFICATE
+        new Paragraph({ spacing: { after: 0 } }),
 
-I/We certify that the transaction effected by this instrument does not form part of a larger transaction or series of transactions in respect of which the amount or value, or aggregate amount or value, of the consideration exceeds £1,000.
+        // Signature rows
+        tbl([
+          row(cell('Signature(s) of transferor(s)', { span: 4 })),
+          row(cell('1.'), cell(''), cell(''), cell('')),
+          row(cell('2.'), cell(''), cell(''), cell('')),
+          row(cell('3.'), cell(''), cell(''), cell('')),
+          new TableRow({
+            children: [
+              new TableCell({ borders, margins: cellPad, children: [new Paragraph({ children: [new TextRun({ text: '4.', font: 'Arial', size: 18 })] })] }),
+              new TableCell({ borders, margins: cellPad, children: [new Paragraph({ children: [new TextRun({ text: '', font: 'Arial', size: 18 })] })] }),
+              new TableCell({ borders, margins: cellPad, children: [new Paragraph({ children: [new TextRun({ text: '', font: 'Arial', size: 18 })] })] }),
+              new TableCell({ borders, margins: cellPad, children: [new Paragraph({ children: [new TextRun({ text: 'Date', font: 'Arial', size: 18 })] })] }),
+              new TableCell({ borders, margins: cellPad, children: [new Paragraph({ children: [new TextRun({ text: '', font: 'Arial', size: 18 })] })] })
+            ]
+          }),
+          row(new TableCell({ borders, columnSpan: 4, margins: cellPad, children: [new Paragraph({ children: [new TextRun({ text: 'A body corporate should execute under its common seal or otherwise in accordance with applicable statutory requirements.', font: 'Arial', size: 18 })] })] }))
+        ], [1000, 2500, 2500, 1513, 1513]),
 
-Signature: _________________________
-Description: Solicitor
-Date: ${d.today}`;
+        new Paragraph({ spacing: { after: 0 } }),
 
-  return { name: 'Stock Transfer Form (J30)', filename: `STF_${d.targetCompany.replace(/\s/g,'_')}.txt`, content };
+        // Transferee box
+        tbl([
+          new TableRow({
+            children: [
+              new TableCell({
+                borders, width: { size: 4500, type: WidthType.DXA }, margins: cellPad,
+                children: [new Paragraph({ children: [new TextRun({ text: 'Full name(s) and full postal address(es) (including postcode) of the person(s) to whom the security is transferred. Please state title, if any, or whether Mr., Mrs., or Miss. Please complete in typewriting or in block capitals.', font: 'Arial', size: 18 })] })]
+              }),
+              new TableCell({
+                borders, width: { size: 3026, type: WidthType.DXA }, margins: cellPad,
+                children: [
+                  new Paragraph({ children: [new TextRun({ text: d.buyerName, font: 'Arial', size: 18, bold: true })] }),
+                  new Paragraph({ children: [new TextRun({ text: d.buyerAddress || '', font: 'Arial', size: 18 })] })
+                ]
+              }),
+              new TableCell({ borders, width: { size: 1500, type: WidthType.DXA }, margins: cellPad, children: [new Paragraph({ children: [new TextRun({ text: 'Account Designation (if any)', font: 'Arial', size: 18 })] })] })
+            ]
+          }),
+          row(new TableCell({ borders, columnSpan: 3, margins: cellPad, children: [new Paragraph({ children: [new TextRun({ text: 'I/We request that such entries be made in the register as are necessary to give effect to this transfer.', font: 'Arial', size: 18 })] })] })),
+          row(cell('Stamp of Buying Broker(s) (if any)'), cell('Stamp or name and address of person lodging this form (if other than the Buying Broker(s))'), cell(''))
+        ], [4500, 3026, 1500]),
+
+        new Paragraph({ spacing: { after: 160 } }),
+
+        // Certificate section heading
+        new Paragraph({ children: [new TextRun({ text: 'Form of certificate required – transfer not chargeable with ad valorem stamp duty', font: 'Arial', size: 18, bold: true })] }),
+
+        new Paragraph({ spacing: { after: 80 } }),
+
+        // Certificate 1 & 2
+        tbl([
+          row(
+            cell(''),
+            new TableCell({
+              borders, columnSpan: 2, margins: cellPad,
+              children: [
+                new Paragraph({ children: [new TextRun({ text: 'Complete Certificate 1 if: ', font: 'Arial', size: 18, bold: true }), new TextRun({ text: 'the consideration you give for the shares is £1,000 or less and the transfer is not part of a larger transaction or series of transactions (as referred to in Certificate 1).', font: 'Arial', size: 18 })] }),
+                new Paragraph({ spacing: { after: 60 } }),
+                new Paragraph({ children: [new TextRun({ text: 'Complete Certificate 2 if: ', font: 'Arial', size: 18, bold: true }), new TextRun({ text: 'the transfer is otherwise exempt from Stamp Duty and you are not claiming a relief, or the consideration given is not chargeable consideration.', font: 'Arial', size: 18 })] })
+              ]
+            })
+          ),
+          row(cell(''), cell('Certificate 1', { bold: true, span: 2 })),
+          row(
+            cell('* Please delete as appropriate'),
+            new TableCell({ borders, columnSpan: 2, margins: cellPad, children: [new Paragraph({ children: [new TextRun({ text: 'I/We* certify that the transaction effected by this instrument does not form part of a larger transaction or series of transactions in respect of which the amount or value, or aggregate amount or value, of the consideration exceeds £1,000.', font: 'Arial', size: 18 })] })] })
+          ),
+          row(
+            cell('** Delete second sentence if certificate is given by transferor'),
+            new TableCell({ borders, columnSpan: 2, margins: cellPad, children: [new Paragraph({ children: [new TextRun({ text: "I/We* confirm that I/we* have been duly authorised by the transferor to sign this certificate and that I/we* am/are* aware of all the facts of the transaction.**", font: 'Arial', size: 18 })] })] })
+          ),
+          row(cell(''), cell('Signature(s)'), cell('Description ("Transferor", "Solicitor" etc.)')),
+          row(cell(''), cell(''), cell('')),
+          row(cell(''), cell(''), cell('')),
+          row(cell(''), cell(''), cell('')),
+          row(cell(''), new TableCell({ borders, margins: cellPad, children: [new Paragraph({ children: [new TextRun({ text: 'Date', font: 'Arial', size: 18 })] })] }), cell('')),
+          row(cell(''), cell('Certificate 2', { bold: true, span: 2 })),
+          row(
+            cell('* Please delete as appropriate'),
+            new TableCell({ borders, columnSpan: 2, margins: cellPad, children: [new Paragraph({ children: [new TextRun({ text: 'I/We* certify that this instrument is otherwise exempt from ad valorem Stamp Duty without a claim for relief being made or that no chargeable consideration is given for the transfer for the purposes of Stamp Duty.', font: 'Arial', size: 18 })] })] })
+          ),
+          row(
+            cell('** Delete second sentence if certificate is given by transferor'),
+            new TableCell({ borders, columnSpan: 2, margins: cellPad, children: [new Paragraph({ children: [new TextRun({ text: "I/We* confirm that I/we* have been duly authorised by the transferor to sign this certificate and that I/we* am/are* aware of all the facts of the transaction.**", font: 'Arial', size: 18 })] })] })
+          ),
+          row(cell(''), cell('Signature(s)'), cell('Description ("Transferor", "Solicitor" etc.)')),
+          row(cell(''), cell(''), cell('')),
+          row(cell(''), cell(''), cell('')),
+          row(cell(''), cell(''), cell('')),
+          row(cell(''), new TableCell({ borders, margins: cellPad, children: [new Paragraph({ children: [new TextRun({ text: 'Date', font: 'Arial', size: 18 })] })] }), cell('')),
+        ], [2500, 3513, 3013]),
+
+        new Paragraph({ spacing: { after: 80 } }),
+
+        // Notes
+        tbl([
+          row(new TableCell({
+            borders, columnSpan: 2, margins: cellPad,
+            children: [
+              new Paragraph({ children: [new TextRun({ text: 'Notes', font: 'Arial', size: 18, bold: true })] }),
+              new Paragraph({ children: [new TextRun({ text: "You don't need to send this form to HM Revenue & Customs (HMRC) if you have completed either Certificate 1 or 2, or the consideration for the transfer is nil (in which case you must write 'nil' in the consideration box on the front of the form). In these situations send the form to the company or its registrar. In all other cases – including where relief from Stamp Duty is claimed – send the transfer form to HMRC to be stamped.", font: 'Arial', size: 18 })] }),
+              new Paragraph({ children: [new TextRun({ text: 'Information on Stamp Duty reliefs and exemptions and how to claim them can be found on the HMRC website at hmrc.gov.uk/sd', font: 'Arial', size: 18 })] })
+            ]
+          }))
+        ], [W])
+      ]
+    }]
+  });
+
+  const blob = await Packer.toBlob(doc);
+  // Return special blob-based result
+  return {
+    name: 'Stock Transfer Form (J30)',
+    filename: `STF_${d.targetCompany.replace(/\s/g,'_')}.docx`,
+    content: null,
+    blob
+  };
 }
 
 async function generateTargetSoleDir(d) {
