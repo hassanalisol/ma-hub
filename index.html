@@ -2049,7 +2049,7 @@ function previewDoc(index) {
       <pre style="font-family:var(--font-sans);font-size:13px;color:var(--text2);white-space:pre-wrap;line-height:1.7;max-height:60vh;overflow-y:auto">${doc.content}</pre>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-primary" onclick="downloadDoc(${index})">Download as .txt</button>
+      <button class="btn btn-primary" onclick="downloadDoc(${index})">↓ Download .docx</button>
       <button class="btn btn-secondary" onclick="closeModal()">Close</button>
     </div>`, 'modal-lg');
 }
@@ -2057,14 +2057,9 @@ function previewDoc(index) {
 function downloadDoc(index) {
   const doc = window._generatedDocs?.[index];
   if (!doc) return;
-  const blob = new Blob([doc.content], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${doc.name.replace(/\s+/g, '_')}_${doc.soleDir ? 'Sole_Dir' : 'Board_Meeting'}.txt`;
-  a.click();
-  URL.revokeObjectURL(url);
-  showNotif(`${doc.name} downloaded`, 'success');
+  const filename = `${doc.name.replace(/\s+/g, '_')}_${doc.soleDir ? 'Sole_Dir' : 'Board_Meeting'}`;
+  downloadAsDocx(doc.content, filename);
+  showNotif(`${doc.name} downloading as .docx`, 'success');
 }
 
 // ── FILE UTILITIES ──
@@ -2129,6 +2124,227 @@ function loadScript(src) {
     s.onerror = reject;
     document.head.appendChild(s);
   });
+}
+
+async function loadDocxLib() {
+  if (!window.docx) {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js');
+  }
+  return window.docx;
+}
+
+// ── DOCX BUILDER ENGINE ──
+// Converts plain text content into a formatted Word document blob
+async function buildDocxBlob(content, title) {
+  const lib = await loadDocxLib();
+  const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+          AlignmentType, BorderStyle, WidthType, ShadingType, HeadingLevel } = lib;
+
+  const lines = content.split('\n');
+  const children = [];
+
+  // Numbering config for lettered lists
+  const numberingConfig = {
+    config: [
+      {
+        reference: 'letterList',
+        levels: [{
+          level: 0,
+          format: 'lowerLetter',
+          text: '(%1)',
+          alignment: AlignmentType.LEFT,
+          style: { paragraph: { indent: { left: 720, hanging: 360 } } }
+        }]
+      }
+    ]
+  };
+
+  // Signature block detector
+  const isSignatureLine = l => /^_{10,}/.test(l.trim());
+  const isHeading = l => {
+    const t = l.trim();
+    return t.length > 0 && t === t.toUpperCase() && t.length > 3 && !/^\d/.test(t) && !/^[\(a-z]/.test(t) && !/_{5}/.test(t);
+  };
+  const isTableRow = l => l.includes('|');
+  const isLetterItem = l => /^\([a-z]\)/.test(l.trim());
+  const isNumberItem = l => /^\d+\./.test(l.trim());
+
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    // Skip blank lines — add spacing via paragraph spacing instead
+    if (!trimmed) {
+      children.push(new Paragraph({ spacing: { before: 0, after: 80 } }));
+      i++;
+      continue;
+    }
+
+    // Table rows — collect consecutive pipe lines
+    if (isTableRow(trimmed)) {
+      const tableLines = [];
+      while (i < lines.length && lines[i].includes('|')) {
+        tableLines.push(lines[i]);
+        i++;
+      }
+      // Filter out separator rows (---|---)
+      const dataRows = tableLines.filter(l => !/^\s*\|[-\s|:]+\|\s*$/.test(l));
+      if (dataRows.length > 0) {
+        const parsedRows = dataRows.map(l =>
+          l.split('|').map(c => c.trim()).filter((c,idx,arr) => idx > 0 && idx < arr.length - 1)
+        );
+        const colCount = Math.max(...parsedRows.map(r => r.length));
+        const colWidth = Math.floor(9026 / Math.max(colCount, 1));
+        const border = { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' };
+        const borders = { top: border, bottom: border, left: border, right: border };
+
+        const tableRows = parsedRows.map((row, ri) => {
+          const cells = Array.from({ length: colCount }, (_, ci) => {
+            const cellText = row[ci] || '';
+            const isHeader = ri === 0;
+            return new TableCell({
+              borders,
+              width: { size: colWidth, type: WidthType.DXA },
+              shading: isHeader ? { fill: 'E8EDF2', type: ShadingType.CLEAR } : undefined,
+              margins: { top: 80, bottom: 80, left: 120, right: 120 },
+              children: [new Paragraph({
+                children: [new TextRun({
+                  text: cellText,
+                  bold: isHeader,
+                  font: 'Arial',
+                  size: 20
+                })]
+              })]
+            });
+          });
+          return new TableRow({ children: cells });
+        });
+
+        children.push(new Table({
+          width: { size: 9026, type: WidthType.DXA },
+          columnWidths: Array(colCount).fill(colWidth),
+          rows: tableRows
+        }));
+        children.push(new Paragraph({ spacing: { after: 120 } }));
+      }
+      continue;
+    }
+
+    // Signature lines
+    if (isSignatureLine(trimmed)) {
+      // Split on multiple spaces for side-by-side sigs
+      const parts = trimmed.split(/\s{4,}/);
+      if (parts.length > 1) {
+        children.push(new Paragraph({
+          children: parts.map((p, idx) => new TextRun({
+            text: (idx > 0 ? '          ' : '') + p,
+            font: 'Arial', size: 20
+          })),
+          spacing: { before: 240, after: 80 }
+        }));
+      } else {
+        children.push(new Paragraph({
+          children: [new TextRun({ text: trimmed, font: 'Arial', size: 20 })],
+          spacing: { before: 240, after: 40 }
+        }));
+      }
+      i++;
+      continue;
+    }
+
+    // ALL-CAPS headings
+    if (isHeading(trimmed)) {
+      children.push(new Paragraph({
+        children: [new TextRun({ text: trimmed, bold: true, font: 'Arial', size: 22, allCaps: true })],
+        spacing: { before: 280, after: 120 }
+      }));
+      i++;
+      continue;
+    }
+
+    // Lettered list items (a), (b), (c)
+    if (isLetterItem(trimmed)) {
+      const match = trimmed.match(/^\(([a-z])\)\s*(.*)/);
+      children.push(new Paragraph({
+        children: [new TextRun({ text: `(${match[1]})  ${match[2]}`, font: 'Arial', size: 20 })],
+        indent: { left: 720, hanging: 360 },
+        spacing: { before: 60, after: 60 }
+      }));
+      i++;
+      continue;
+    }
+
+    // Numbered items
+    if (isNumberItem(trimmed)) {
+      children.push(new Paragraph({
+        children: [new TextRun({ text: trimmed, font: 'Arial', size: 20 })],
+        indent: { left: 720, hanging: 360 },
+        spacing: { before: 60, after: 60 }
+      }));
+      i++;
+      continue;
+    }
+
+    // Bold title-like lines at start (company name, RE: lines)
+    const isTitleLine = i < 5 || /^RE:|^Dear |^To:|^From:/.test(trimmed);
+    const isBoldLine = /^RE:|^Dear /.test(trimmed);
+
+    // Regular paragraph
+    children.push(new Paragraph({
+      children: [new TextRun({
+        text: trimmed,
+        font: 'Arial',
+        size: 20,
+        bold: isBoldLine
+      })],
+      spacing: { before: 60, after: 60 }
+    }));
+    i++;
+  }
+
+  const doc = new Document({
+    numbering: numberingConfig,
+    styles: {
+      default: {
+        document: { run: { font: 'Arial', size: 20 } }
+      }
+    },
+    sections: [{
+      properties: {
+        page: {
+          size: { width: 11906, height: 16838 }, // A4
+          margin: { top: 1440, right: 1440, bottom: 1440, left: 1800 }
+        }
+      },
+      children
+    }]
+  });
+
+  return await Packer.toBlob(doc);
+}
+
+async function downloadAsDocx(content, filename) {
+  try {
+    const blob = await buildDocxBlob(content, filename);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename.replace(/\.txt$/, '') + '.docx';
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch(e) {
+    console.error('DOCX generation failed:', e);
+    // Fallback to txt
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    showNotif('Word export failed — downloaded as .txt instead', 'error');
+  }
 }
 
 function parseTargetDate(dateStr) {
@@ -3332,11 +3548,7 @@ async function generateAllAncillaries() {
 
 function downloadAncillary(filename, b64content) {
   const text = decodeURIComponent(atob(b64content));
-  const blob = new Blob([text], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = filename;
-  a.click(); URL.revokeObjectURL(url);
+  downloadAsDocx(text, filename);
 }
 
 // ── TEMPLATE FUNCTIONS ──
@@ -3964,13 +4176,7 @@ function copyAdhocDoc() {
 
 function downloadAdhocDoc() {
   if (!window._adhocDoc) return;
-  const blob = new Blob([window._adhocDoc.text], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'generated_document.txt';
-  a.click();
-  URL.revokeObjectURL(url);
+  downloadAsDocx(window._adhocDoc.text, 'generated_document');
 }
 
 
