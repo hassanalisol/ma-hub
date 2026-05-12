@@ -3608,15 +3608,13 @@ async function generateSTF(d) {
   xml = xml.replace(/\[Buyer Address\]/g, d.buyerAddress || '');
   xml = xml.replace(/\[Number of Shares\]/g, d.numberOfShares || '[Number of Shares]');
 
-  // Fragmented [Nominal Value] — split across XML runs by Word's proofErr elements
-  xml = xml.replace(
-    /<w:t>\[<\/w:t><\/w:r><w:proofErr w:type="gramEnd"\/><w:r><w:rPr><w:bCs\/><\/w:rPr><w:t>Nominal Value\]<\/w:t>/g,
-    `<w:t>${nomVal}</w:t></w:r><w:r><w:rPr><w:bCs/></w:rPr><w:t>`
-  );
-  xml = xml.replace(
-    /<w:t>\[<\/w:t><\/w:r><w:proofErr w:type="gramEnd"\/><w:r w:rsidR="00464143"><w:t>Nominal Value\]<\/w:t>/g,
-    `<w:t>${nomVal}</w:t></w:r><w:r w:rsidR="00464143"><w:t>`
-  );
+  // Fragmented [Nominal Value] - use split/join to avoid regex escaping issues
+  const nomFrag1 = '<w:t>[</w:t></w:r><w:proofErr w:type="gramEnd"/><w:r><w:rPr><w:bCs/></w:rPr><w:t>Nominal Value]</w:t>';
+  const nomRepl1 = '<w:t>' + nomVal + '</w:t></w:r><w:r><w:rPr><w:bCs/></w:rPr><w:t>';
+  xml = xml.split(nomFrag1).join(nomRepl1);
+  const nomFrag2 = '<w:t>[</w:t></w:r><w:proofErr w:type="gramEnd"/><w:r w:rsidR="00464143"><w:t>Nominal Value]</w:t>';
+  const nomRepl2 = '<w:t>' + nomVal + '</w:t></w:r><w:r w:rsidR="00464143"><w:t>';
+  xml = xml.split(nomFrag2).join(nomRepl2);
 
   zip.file('word/document.xml', xml);
   const blob = await zip.generateAsync({
