@@ -1365,15 +1365,69 @@ function renderAITab() {
       <div id="spa-status-area"></div>
     </div>
 
-    <!-- GENERATED DOCS -->
+    <!-- GENERATED DOCS (board resolutions) -->
     <div class="ai-section" id="generated-docs-section" style="${extractedHOTData ? '' : 'display:none'}">
-      <div class="ai-section-title">Generated Documents</div>
+      <div class="ai-section-title">Phase 2B Results — Board Resolutions</div>
       <div id="generated-docs-list">
-        <div style="font-size:13px;color:var(--text3)">Upload the SPA to generate ancillary documents.</div>
+        <div style="font-size:13px;color:var(--text3)">Upload the SPA to generate board resolutions.</div>
       </div>
     </div>
 
-  </div>`;
+    <!-- PHASE 3: ANCILLARY GENERATION -->
+    <div class="ai-section" id="ancillary-section">
+      <div class="ai-section-title">Phase 3 — Ancillary Documents</div>
+      <div style="font-size:13px;color:var(--text3);margin-bottom:1.25rem;line-height:1.6">
+        Generate all ancillary documents using your templates. Populated automatically from the deal record and SPA extraction.
+        ${window._spaData ? '' : '<br><span style="color:var(--amber)">⚠ Upload and process the SPA first for full auto-population.</span>'}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.25rem">
+        ${[
+          {id:'stf', label:'Stock Transfer Form', icon:'📋'},
+          {id:'target_sole', label:'Target Board (Sole Director)', icon:'📄'},
+          {id:'target_mom', label:'Target Board Minutes (Multiple Directors)', icon:'📄'},
+          {id:'buyer_mom', label:'Buyer Board Minutes', icon:'📄'},
+          {id:'dir_resignation', label:'Director Resignation Letter', icon:'✉️'},
+          {id:'psc_outgoing', label:'Outgoing PSC Letter', icon:'📩'},
+          {id:'psc_rle', label:'RLE Notification (Buyer PSC)', icon:'📩'},
+          {id:'indemnity', label:'Indemnity for Lost Share Certificate', icon:'🔒'},
+          {id:'bible_index', label:'Completion Bible Index', icon:'📚'},
+        ].map(d => `
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px 14px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;color:var(--text)">${d.icon} ${d.label}</span>
+          <button class="btn btn-primary btn-sm" onclick="generateAncillary('${d.id}')">Generate</button>
+        </div>`).join('')}
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:1rem;margin-top:0.5rem">
+        <button class="btn btn-ai" onclick="generateAllAncillaries()" style="width:100%;justify-content:center">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          Generate All Ancillaries
+        </button>
+      </div>
+
+      <div id="ancillary-status" style="margin-top:1rem"></div>
+      <div id="ancillary-results" style="margin-top:1rem"></div>
+    </div>
+
+    <!-- PHASE 4: AD-HOC DOCUMENT GENERATION -->
+    <div class="ai-section">
+      <div class="ai-section-title">Phase 4 — Ad-Hoc Documents & Letters</div>
+      <div style="font-size:13px;color:var(--text3);margin-bottom:1rem;line-height:1.6">
+        Generate any document using the deal's existing information. Just describe what you need.
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:10px">
+        <input class="form-input" id="adhoc-prompt" placeholder="e.g. Write a letter to the accountants updating them on the current stage…" style="flex:1">
+        <button class="btn btn-ai" onclick="generateAdhocDoc()">Generate</button>
+      </div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:1rem">
+        Examples: client update email · letter to HMRC · chronology sheet · completion statement · file note · letter to accountants
+      </div>
+      <div id="adhoc-status"></div>
+      <div id="adhoc-result" style="margin-top:1rem"></div>
+    </div>
+
+  </div>\`;
 }
 
 function renderExtractedData(data) {
@@ -1751,6 +1805,10 @@ ${textContent.substring(0, 15000)}`;
       generatedDocs.push({ type: docSpec.type, soleDir: docSpec.soleDir, content: docContent, name: `${capitalize(docSpec.type)} Board Resolution`, generated: new Date().toLocaleString('en-GB') });
       log(`✓ ${capitalize(docSpec.type)} board resolution generated`);
     }
+
+    // Store SPA data globally for ancillary generation
+    window._spaData = parsed;
+    log('SPA data stored for ancillary generation…');
 
     // Update deal record from SPA
     log('Updating deal record from SPA…');
@@ -3172,6 +3230,685 @@ async function navigateToDealFromAlert(dealId) {
   const deal = deals.find(d => d.id === dealId);
   if (deal) navigate('deal', deal);
 }
+
+
+// ═══════════════════════════════════════════════════════
+// ANCILLARY DOCUMENT GENERATION
+// ═══════════════════════════════════════════════════════
+
+// Collect all deal data needed for templates
+async function collectDealData() {
+  const deal = currentDeal;
+  const parties = await loadParties(deal.id) || [];
+
+  const find = (role) => parties.find(p => p.role && p.role.toLowerCase().includes(role.toLowerCase()));
+  const findAll = (role) => parties.filter(p => p.role && p.role.toLowerCase().includes(role.toLowerCase()));
+
+  const buyer = find('buyer');
+  const seller = find('seller');
+  const target = find('target');
+  const outDir = find('outgoing director') || find('resigning director');
+  const inDir = find('incoming director') || find('new director');
+
+  const spa = window._spaData || {};
+
+  return {
+    // Target
+    targetCompany: spa.targetCompany || target?.name || deal.deal_name?.replace(/^(acquisition|purchase|sale) of /i,'') || '[Target Company]',
+    targetCompanyNumber: spa.targetCompanyNumber || target?.firm || '[Company Number]',
+    targetAddress: target?.email || '[Target Company Address]',
+    // Buyer
+    buyerName: spa.buyerName || buyer?.name || deal.counterparty || '[Buyer]',
+    buyerCompanyNumber: spa.buyerCompanyNumber || buyer?.firm || '[Buyer Company Number]',
+    buyerAddress: buyer?.email || '[Buyer Address]',
+    // Seller
+    sellerName: spa.sellers?.[0]?.name || seller?.name || '[Seller]',
+    sellerAddress: seller?.email || '[Seller Address]',
+    sellers: spa.sellers || [],
+    // Directors
+    outgoingDirector: outDir?.name || spa.targetDirectors?.find(d=>d.resigning)?.name || '[Outgoing Director]',
+    incomingDirector: inDir?.name || spa.newDirectors?.[0] || '[Incoming Director]',
+    // Share details
+    numberOfShares: spa.totalShares || '[Number of Shares]',
+    numberOfSharesWords: spa.totalSharesWords || '[Number of Shares in Words]',
+    shareClass: spa.shareClass || '[Class of Shares]',
+    nominalValue: spa.nominalValue || '1.00',
+    purchasePrice: spa.purchasePrice || deal.deal_value ? `£${Number(deal.deal_value).toLocaleString('en-GB')}` : '[Purchase Price]',
+    // Dates
+    completionDate: spa.completionDate || deal.target_completion ? new Date(deal.target_completion).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : '[Completion Date]',
+    today: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}),
+    // New address
+    newAddress: spa.targetNewRegisteredOffice || '[New Registered Office Address]',
+    // Solicitors
+    buyerSolicitors: deal.client_role === 'Buyer' ? 'Hassan Ali Solicitors' : (find('buyer solicitor')?.name || '[Buyer Solicitors]'),
+    sellerSolicitors: deal.client_role === 'Seller' ? 'Hassan Ali Solicitors' : (find('seller solicitor')?.name || '[Seller Solicitors]'),
+    // Deal ref
+    matterRef: deal.matter_ref || '[Matter Ref]',
+  };
+}
+
+// ── INDIVIDUAL ANCILLARY GENERATORS ──
+
+async function generateAncillary(type) {
+  const statusEl = document.getElementById('ancillary-status');
+  const resultsEl = document.getElementById('ancillary-results');
+  statusEl.innerHTML = '<div class="ai-status"><div class="ai-status-header"><div class="ai-status-dot processing"></div><div class="ai-status-label">Generating document…</div></div></div>';
+
+  try {
+    const d = await collectDealData();
+    let result;
+
+    switch(type) {
+      case 'stf': result = await generateSTF(d); break;
+      case 'target_sole': result = await generateTargetSoleDir(d); break;
+      case 'target_mom': result = await generateTargetMoM(d); break;
+      case 'buyer_mom': result = await generateBuyerMoM(d); break;
+      case 'dir_resignation': result = await generateDirResignation(d); break;
+      case 'psc_outgoing': result = await generatePSCOutgoing(d); break;
+      case 'psc_rle': result = await generateRLE(d); break;
+      case 'indemnity': result = await generateIndemnity(d); break;
+      case 'bible_index': result = await generateBibleIndex(d); break;
+      default: throw new Error('Unknown document type');
+    }
+
+    statusEl.innerHTML = '<div class="ai-status" style="border-color:var(--green-border)"><div class="ai-status-header"><div class="ai-status-dot done"></div><div class="ai-status-label" style="color:var(--green)">Document generated</div></div></div>';
+
+    // Add to results
+    const existing = resultsEl.innerHTML === '' ? '' : resultsEl.innerHTML;
+    resultsEl.innerHTML = existing + `
+    <div class="generated-doc" style="margin-bottom:8px">
+      <div class="generated-doc-info">
+        <div class="generated-doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <div>
+          <div class="generated-doc-name">${result.name}</div>
+          <div class="generated-doc-meta">Generated ${new Date().toLocaleString('en-GB')}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary btn-sm" onclick="downloadAncillary('${result.filename}','${btoa(encodeURIComponent(result.content))}')">↓ Download</button>
+      </div>
+    </div>`;
+
+    showNotif(result.name + ' ready', 'success');
+
+  } catch(e) {
+    statusEl.innerHTML = `<div class="ai-status" style="border-color:var(--red-border)"><div class="ai-status-header"><div class="ai-status-dot error"></div><div class="ai-status-label" style="color:var(--red)">Error: ${e.message}</div></div></div>`;
+    showNotif('Generation failed: ' + e.message, 'error');
+  }
+}
+
+async function generateAllAncillaries() {
+  const types = ['stf','target_sole','buyer_mom','dir_resignation','psc_outgoing','psc_rle','indemnity','bible_index'];
+  document.getElementById('ancillary-results').innerHTML = '';
+  for (const t of types) {
+    await generateAncillary(t);
+    await new Promise(r => setTimeout(r, 300));
+  }
+  showNotif('All ancillaries generated', 'success');
+}
+
+function downloadAncillary(filename, b64content) {
+  const text = decodeURIComponent(atob(b64content));
+  const blob = new Blob([text], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  a.click(); URL.revokeObjectURL(url);
+}
+
+// ── TEMPLATE FUNCTIONS ──
+// Each returns { name, filename, content } as plain text (formatted for Word paste or .txt)
+
+async function generateSTF(d) {
+  const content = `STOCK TRANSFER FORM
+Transfer by individual
+
+Consideration money: ${d.purchasePrice}
+
+Name of undertaking: ${d.targetCompany} (company number: ${d.targetCompanyNumber})
+
+Description of security: ${d.shareClass} shares of £${d.nominalValue} each
+
+Number of shares: ${d.numberOfSharesWords} (${d.numberOfShares} units of £${d.nominalValue})
+
+In the name(s) of: ${d.sellerName}
+${d.sellerAddress}
+
+I/we transfer the above security out of the name(s) stated above to the person(s) named below:
+
+Transferee: ${d.buyerName}
+${d.buyerAddress}
+
+Signature(s) of transferor(s):
+
+1. _________________________ Date: _______________
+
+I/We request that such entries be made in the register as are necessary to give effect to this transfer.
+
+---
+CERTIFICATE
+
+I/We certify that the transaction effected by this instrument does not form part of a larger transaction or series of transactions in respect of which the amount or value, or aggregate amount or value, of the consideration exceeds £1,000.
+
+Signature: _________________________
+Description: Solicitor
+Date: ${d.today}`;
+
+  return { name: 'Stock Transfer Form (J30)', filename: `STF_${d.targetCompany.replace(/\s/g,'_')}.txt`, content };
+}
+
+async function generateTargetSoleDir(d) {
+  const content = `Company number: ${d.targetCompanyNumber}                    Date: ${d.completionDate}
+
+${d.targetCompany}
+(the "Company")
+
+WRITTEN RESOLUTIONS OF THE SOLE DIRECTOR OF THE COMPANY
+
+I, ${d.outgoingDirector} (the "Sole Director"), being the sole director of the Company entitled to attend and vote at a board meeting of the Company, RESOLVE, in accordance with Article 7(2)(a) of the Model Articles for Private Companies Limited by Shares prescribed by The Companies (Model Articles) Regulations (SI 2008/3229) (the "Model Articles") as incorporated into the articles of association of the Company (the "Articles"), the following resolutions in writing:
+
+INTRODUCTION AND PURPOSE
+
+It is proposed that the Sole Director considers and, if thought fit, approves certain matters relating to the proposed acquisition by ${d.buyerName} (the "Buyer") of the entire issued share capital of the Company (the "Acquisition") on the terms of a sale and purchase agreement to be entered into on or around the date of these resolutions (the "Agreement").
+
+The Sole Director acknowledges the need to consider their general duties, including those contained in the Companies Act 2006 (the "Act"), in considering such matters.
+
+DECLARATION OF INTERESTS
+
+The Sole Director has declared the nature and extent of his interest in the business to be considered by him pursuant to these resolutions in accordance with Sections 177 and 182 of the Act and the Articles, and such declaration is taken as sufficient for all purposes.
+
+It is further noted that pursuant to Article 7(2), as the Company only has one director, the Sole Director may take decisions without regard to any of the other provisions of the Articles.
+
+DOCUMENTATION PRODUCED
+
+The Sole Director referred to:
+
+(a) a stock transfer form providing for the following transfer of ${d.shareClass} shares of £${d.nominalValue} in the capital of the Company together with the relevant share certificate and/or indemnities in respect of lost or missing share certificates (the "Transfer"):
+
+    Transferor: ${d.sellerName}
+    Transferee: ${d.buyerName}
+    No. and class of Shares: ${d.numberOfShares} ${d.shareClass} shares of £${d.nominalValue}
+
+(b) a letter addressed to the Company from ${d.outgoingDirector} (the "Outgoing Director") whereby the Outgoing Director tenders their resignation as a director of the Company with effect from Completion (as defined in the Agreement);
+
+(c) consents to act as a director of the Company from ${d.incomingDirector} (the "Incoming Director");
+
+(d) a letter from ${d.sellerName} confirming that they will, with effect from completion of the Agreement, cease to be a registrable person (within the meaning of section 790C of the Companies Act 2006) in relation to the Company;
+
+(e) a letter from the Buyer confirming that with effect immediately after completion of the Agreement, it will become a registrable relevant legal entity (within the meaning of section 790C of the Companies Act 2006) in relation to the Company,
+
+(a) to (e) together, the "Documents".
+
+PROPOSED CHANGES
+
+It is proposed that, in connection with the Acquisition:
+
+(a) ${d.incomingDirector} had consented to act as director of the Company and was to be appointed as director of the Company, to take effect immediately following Completion (as defined in the Agreement); and
+
+(b) the registered office address of the Company be changed to ${d.newAddress} (the "New Address") with effect from Completion (as defined in the Agreement).
+
+BOARD RESOLUTIONS
+
+Having carefully considered the Documents and the matters proposed by these resolutions, the Sole Director RESOLVES that:
+
+(a) in the opinion of the Sole Director, the Documents would promote the success of the Company for the benefit of its members as a whole;
+
+(b) subject to being duly stamped, the Transfer be and it is hereby approved for registration and a certificate for the relevant shares be duly issued in the name of the Buyer;
+
+(c) the appointment of ${d.incomingDirector} as Incoming Director be and is hereby approved, to take effect immediately following Completion (as defined in the Agreement);
+
+(d) the New Address be adopted as the registered office address of the Company with effect from Completion (as defined in the Agreement).
+
+The Sole Director further RESOLVES that any one or more directors of the Company be authorised to do all such acts and things and agree and execute on behalf of the Company all such other documents as may be required in connection with the Acquisition.
+
+FILING REQUIREMENTS
+
+The Sole Director hereby authorises the Company's solicitors and/or the Buyer's solicitors, to be instructed to make all necessary and appropriate entries in the books and registers of the Company and to make all necessary returns to Companies House.
+
+
+______________________________
+${d.outgoingDirector}
+Sole Director`;
+
+  return { name: 'Target Board Resolution (Sole Director)', filename: `Target_Sole_Director_Resolution_${d.targetCompany.replace(/\s/g,'_')}.txt`, content };
+}
+
+async function generateTargetMoM(d) {
+  const content = `Company Name: ${d.targetCompany}
+Company Number: ${d.targetCompanyNumber}
+(the "Company")
+
+MINUTES OF A MEETING OF THE BOARD OF DIRECTORS
+
+held at the Company's registered office on ${d.completionDate}
+
+PRESENT:
+
+Name: _______________________     Position: Director
+Name: _______________________     Position: Director
+(together, the "Directors")
+
+CHAIR
+
+[THE CHAIR] was appointed Chair of the meeting and chaired the meeting throughout (the "Chair").
+
+NOTICE AND QUORUM
+
+The Chair reported that the meeting had been duly convened and that a quorum was present in accordance with the articles of association of the Company (the "Articles"). Accordingly, the Chair declared the meeting open.
+
+BUSINESS OF THE MEETING
+
+The Chair reported that the purpose of the meeting was to consider and, if thought fit, approve:
+
+(a) the proposed transfer of ${d.numberOfShares} ${d.shareClass} shares of £${d.nominalValue} each (the "Shares"), being the entire issued share capital of the Company, from ${d.sellerName} (the "Sellers") to ${d.buyerName} (the "Buyer") (the "Transaction"); and
+
+(b) certain other matters and formalities in connection with the completion of the Transaction ("Completion").
+
+DECLARATION OF INTERESTS
+
+Each of the Directors of the Company was asked to declare any situation where they could have a direct or indirect interest that conflicts with the interests of the Company.
+
+| Name | Nature and Extent of Interest |
+| ${d.sellerName} |                               |
+
+SHARE TRANSFER
+
+There was produced to the meeting stock transfer forms (the "Transfers") in respect of the transfer of the Shares to the Buyer, duly executed by each of the Sellers, together with their respective share certificates.
+
+IT WAS RESOLVED that:
+
+(a) subject to Completion, and the Transfers being delivered to the Company duly stamped or certified as not chargeable to stamp duty, such Transfers be approved and accepted for registration and the Buyer be entered in the register of members of the Company as the registered holder of the Shares; and
+
+(b) subject to registration of the Transfers, a new share certificate be prepared in respect of the Shares and such certificate be executed by the Company and delivered to the Buyer.
+
+PSC REGISTER
+
+Subject to Completion, the Buyer shall make all necessary and appropriate entries in the Company's PSC register to reflect the cessation of ${d.sellerName} and the registration of ${d.buyerName} as the new PSC.
+
+APPOINTMENTS AND RESIGNATIONS OF DIRECTORS
+
+IT WAS RESOLVED that ${d.incomingDirector} is hereby appointed as a director of the Company with immediate effect from and subject to Completion.
+
+The resignation letter from ${d.outgoingDirector} was produced and IT WAS RESOLVED that, subject to and with effect from Completion, the resignation be accepted with immediate effect.
+
+FILING
+
+Subject to and with effect from Completion, any director of the Company be and is hereby instructed to make all necessary and appropriate entries in the books and registers of the Company in relation to the Transaction, and to arrange for all necessary documents in connection with the above business to be filed with the Registrar of Companies including Forms PSC02, PSC07, AP01, and TM01.
+
+CLOSE
+
+There being no further business, the Chair declared the meeting closed.
+
+
+______________________________
+Chair`;
+
+  return { name: 'Target Board Minutes (Multiple Directors)', filename: `Target_Board_Minutes_${d.targetCompany.replace(/\s/g,'_')}.txt`, content };
+}
+
+async function generateBuyerMoM(d) {
+  const content = `${d.buyerName}
+${d.buyerCompanyNumber ? `(Company Number: ${d.buyerCompanyNumber})` : ''}
+(the "Company")
+
+MINUTES OF A MEETING OF THE BOARD OF DIRECTORS
+
+held at the Company's registered office on ${d.completionDate}
+
+PRESENT:
+
+Name: _______________________     Position: Director
+Name: _______________________     Position: Director
+(together, the "Directors")
+
+CHAIR
+
+[Director] was appointed chair of the meeting and chaired the meeting throughout.
+
+INTRODUCTION AND PURPOSE
+
+There being a quorum present and the meeting having been duly convened, the meeting was declared open.
+
+It was noted that the purpose of the meeting was to consider and, if thought fit, approve:
+
+(a) the entry into a share purchase agreement between (1) ${d.sellerName} (the "Seller") and the ${d.buyerName} (the "SPA") for the purchase of the entire share capital of ${d.targetCompany} (company number ${d.targetCompanyNumber}) (the "Target") (the "Transaction");
+
+(b) the entry into a disclosure letter containing disclosures made against the warranties in the SPA from the Sellers to the Company (the "Disclosure Letter"); and
+
+(c) various other matters in connection with the Transaction.
+
+DECLARATIONS OF INTEREST
+
+Pursuant to section 177 and 182 of the Companies Act 2006, each of the directors present declared the nature and extent of all such interests in the business proposed to be transacted at the meeting as are required to be declared by those sections.
+
+DOCUMENTS PRODUCED TO THE MEETING
+
+There was produced to the meeting the following draft documents:
+
+(a) the SPA; and
+(b) the Disclosure Letter,
+
+(each a "Transaction Document", together, the "Transaction Documents").
+
+RESOLUTIONS
+
+After due and careful consideration of the terms and conditions of each of the Transaction Documents, IT WAS RESOLVED that:
+
+(a) in the opinion of the directors, the Company entering into each of the Transaction Documents would be most likely to promote the success of the Company for the benefit of its members as a whole;
+
+(b) the terms and conditions of each of the Transaction Documents be and are hereby approved;
+
+(c) any two directors, or any single director of the Company signing in the presence of a witness, be and are hereby authorised to execute the Transaction Documents requiring execution as a deed for and on behalf of the Company;
+
+(d) any single director of the Company be and is hereby authorised to sign those of the Transaction Documents requiring signature for and on behalf of the Company; and
+
+(e) any single director of the Company be and is hereby authorised to do all such acts and things and agree and execute for and on behalf of the Company all such other documents, certificates or notices as they consider necessary or desirable in connection with the Transaction Documents.
+
+FILING
+
+IT WAS RESOLVED to prepare and file all necessary forms and documents with the Registrar of Companies and to make all necessary entries in the Company's statutory books to reflect the business transacted at the meeting.
+
+CLOSE
+
+There being no further business, the Chair declared the meeting closed.
+
+
+______________________________
+Chair
+
+______________________________
+Date`;
+
+  return { name: 'Buyer Board Minutes', filename: `Buyer_Board_Minutes_${d.buyerName.replace(/\s/g,'_')}.txt`, content };
+}
+
+async function generateDirResignation(d) {
+  const content = `To:    The Directors
+
+${d.targetCompany} (the "Company")
+${d.targetAddress}
+
+${d.completionDate}
+
+RE: Resignation Letter
+
+Dear Directors
+
+I, ${d.outgoingDirector} hereby resign from the office of director of the Company with effect from Completion (as defined in the sale and purchase agreement dated on or around the date hereof between (1) ${d.sellerName} and (2) ${d.buyerName} relating to the sale and purchase of the entire issued share capital of the Company (the "Agreement")).
+
+I acknowledge and confirm that I have no claim or right of action of any kind whatsoever, whether contractual or otherwise, against the Company or any of its officers, agents and employees in respect of the termination of my office or otherwise whatsoever, save in relation to any accrued but unpaid salary entitlement for the current month to the extent such contract and arrangements are Disclosed (as defined in the Agreement) and are in accordance with company policy, past practice and in the ordinary course of business. To the extent that any such claim or right of action exists or may exist, I irrevocably and unconditionally waive such claim or right of action and release the Company and its respective officers, agents and employees from all liability in respect of such claim.
+
+I further confirm that the Company is not in any way obligated or indebted to me in respect of my resignation from office as a director of the Company.
+
+Please arrange for details of my resignation to be filed with the Registrar of Companies and arrange for the appropriate amendments to be made to the Company's register of directors and register of directors residential addresses to reflect this resignation.
+
+This letter and any disputes or claims (including non-contractual disputes or claims) arising out of or in connection with it or its subject matter or formation shall be governed by and construed in accordance with English law and the parties submit to the exclusive jurisdiction of the English courts.
+
+This letter is executed as a deed on the date set out above.
+
+Signed as a deed by ${d.outgoingDirector} in the presence of:
+
+______________________________        ______________________________
+Signature of Witness                  ${d.outgoingDirector}
+
+Name of Witness: _______________________
+
+Address of Witness: _______________________
+
+Occupation of Witness: _______________________`;
+
+  return { name: 'Director Resignation Letter', filename: `Director_Resignation_${d.outgoingDirector.replace(/\s/g,'_')}.txt`, content };
+}
+
+async function generatePSCOutgoing(d) {
+  const content = `${d.targetCompany} (company number: ${d.targetCompanyNumber}) (the "Company")
+${d.targetAddress}
+
+${d.completionDate}
+
+To the Board of Directors of the Company
+
+PSC REGISTER — NOTIFICATION OF A RELEVANT CHANGE
+
+I believe that my particulars are stated in the Company's register of people with significant control (the "PSC Register") on the basis that I am a registrable person (within the meaning of section 790C of the Companies Act 2006) in relation to the Company.
+
+The purpose of this letter is to notify the Company that a relevant change (within the meaning of section 790E(3) of the Companies Act 2006) has occurred in relation to my interest in the Company, and to provide certain details concerning the relevant change.
+
+I confirm that:
+
+On the date of this letter (the "Completion Date"), I sold the legal and beneficial title to my ${d.numberOfShares} ${d.shareClass} shares of £${d.nominalValue} in the capital of the Company (the "Sale Shares") to ${d.buyerName} (the "Buyer") under the terms of a share purchase agreement dated on or around the date hereof.
+
+With effect from the Completion Date:
+
+(a) I hold the Sale Shares on bare trust for the Buyer as its nominee pending the registration of the Buyer in the Company's register of members as the holder of the Sale Shares;
+
+(b) I ceased to control, directly or indirectly, any of the voting rights in the Company or to hold the right to appoint or remove a majority of the board of directors of the Company; and
+
+(c) I ceased to have any right to exercise, or actually exercise, significant influence or control over the Company.
+
+As a result, I ceased to be a registrable person (within the meaning of section 790C of the Companies Act 2006) in relation to the Company on the Completion Date.
+
+Yours faithfully
+
+
+______________________________
+${d.sellerName}`;
+
+  return { name: 'Outgoing PSC Letter', filename: `PSC_Outgoing_${d.sellerName.replace(/\s/g,'_')}.txt`, content };
+}
+
+async function generateRLE(d) {
+  const content = `${d.targetCompany} (the "Company")
+${d.targetAddress}
+
+Date: ${d.completionDate}
+
+Dear Sirs,
+
+PSC REGISTER — VOLUNTARY NOTIFICATION OF REGISTRABLE STATUS
+
+We confirm that we, ${d.buyerName} (company number: ${d.buyerCompanyNumber}), are a registrable relevant legal entity (within the meaning of section 790C of the Companies Act 2006) ("RLE") in relation to the Company.
+
+We confirm our required particulars as follows:
+
+Name: ${d.buyerName}
+
+Date of becoming a registrable RLE in relation to the Company: ${d.completionDate}
+
+Registered address: ${d.buyerAddress}
+
+Legal form: Private company limited by shares
+
+Governing law: Companies Act 2006
+
+Company registry: Companies House
+
+Company number: ${d.buyerCompanyNumber}
+
+Nature of control over the Company: We hold, directly or indirectly, more than 75% of the shares in the Company and more than 75% of the voting rights in the Company. We hold the right, directly or indirectly, to appoint or remove a majority of the board of directors of the Company.
+
+We confirm that our interest in the Company will not be held jointly with or on behalf of any other person or entity.
+
+Yours faithfully
+
+
+______________________________
+Authorised Signatory
+${d.buyerName}`;
+
+  return { name: 'RLE Notification (Buyer PSC)', filename: `RLE_Notification_${d.buyerName.replace(/\s/g,'_')}.txt`, content };
+}
+
+async function generateIndemnity(d) {
+  const content = `INDEMNITY FOR LOST OR DESTROYED SHARE CERTIFICATE
+
+To:    The Directors
+       ${d.targetCompany}
+       ${d.targetAddress}
+
+       The Directors
+       ${d.buyerName}
+       ${d.buyerAddress}
+
+Indemnity for lost or destroyed share certificate in respect of ${d.targetCompany} (CRN: ${d.targetCompanyNumber}) (the "Company")
+
+To the best of my knowledge, the original certificate of title to the ${d.numberOfShares} ${d.shareClass} shares of £${d.nominalValue} each (the "Shares") in the capital of the Company registered in my name has been lost or destroyed.
+
+I confirm that:
+
+(a) neither the Shares nor the certificate of title to the Shares have been transferred, charged, lent, deposited or dealt with in any way that may affect my title to the Shares;
+
+(b) I am the legal and beneficial owner of the Shares; and
+
+(c) I am the person entitled to be on the register of members of the Company in respect of the Shares.
+
+REQUEST FOR REGISTRATION OF TRANSFER OF SHARES
+
+I request you to register the transfer of the Shares in accordance with the accompanying stock transfer form without the production of the original certificate for such Shares, and to enter the name of the transferee in the register of members as the legal owner of the Shares.
+
+INDEMNITY
+
+In return for registering the transfer of the Shares in accordance with the accompanying stock transfer form without the production of the original certificate, I agree to indemnify you (to the extent permitted by law) and the Company from and against all claims, actions, proceedings and demands which may be brought against you or the Company and all losses, liabilities, charges, costs, damages and expenses which you or the Company may incur as a result of allowing the registration of the transfer of all or any part of the Shares without the production of the original certificate.
+
+I will return the original certificate to the Company for cancellation if it is found.
+
+This indemnity will continue in force even if the original certificate is returned to the Company.
+
+This indemnity applies although the number and date of the original certificate is not known.
+
+GOVERNING LAW AND JURISDICTION
+
+This indemnity and any dispute or claim (including non-contractual disputes or claims) arising out of or in connection with it or its subject matter or formation shall be governed by and construed in accordance with the law of England and Wales. The courts of England and Wales shall have exclusive jurisdiction to settle any dispute or claim (including non-contractual disputes or claims) arising out of or in connection with this indemnity or its subject matter or formation.
+
+This indemnity has been entered into as a deed on the date stated at the beginning of it.
+
+Executed as a Deed by ${d.sellerName} in the presence of:
+
+Signature of witness: _______________________     ${d.sellerName}: _______________________
+
+Name: _______________________
+
+Address: _______________________
+
+Occupation: _______________________`;
+
+  return { name: 'Indemnity for Lost Share Certificate', filename: `Indemnity_Lost_Cert_${d.sellerName.replace(/\s/g,'_')}.txt`, content };
+}
+
+async function generateBibleIndex(d) {
+  const content = `Acquisition of ${d.targetCompany}
+
+INDEX TO BIBLE OF DOCUMENTS
+
+No. | Document                                          | Parties                          | Dated
+----|---------------------------------------------------|----------------------------------|------
+    | ${d.targetCompany} ACQUISITION DOCUMENTS         |                                  |
+    | Transaction Documents                             |                                  |
+ 1  | Sale and Purchase Agreement                       | ${d.buyerName} / ${d.sellerName} | ${d.completionDate}
+ 2  | Disclosure Letter                                 | ${d.buyerName} / ${d.sellerName} | ${d.completionDate}
+ 3  | Stock Transfer Form                               | ${d.sellerName}                  | ${d.completionDate}
+    | Resolutions                                       |                                  |
+ 4  | ${d.targetCompany} Completion Board Resolution    | ${d.sellerName}                  | ${d.completionDate}
+    | Target Share Documents                            |                                  |
+ 5  | Indemnity For Lost Share Certificate              | ${d.sellerName}                  | ${d.completionDate}
+    | Ancillary Documents                               |                                  |
+ 6  | ${d.buyerName} Incoming RLE Letter                | ${d.buyerName}                   | ${d.completionDate}
+ 7  | Outgoing PSC Letter                               | ${d.sellerName}                  | ${d.completionDate}
+ 8  | Director Resignation Letter                       | ${d.outgoingDirector}            | ${d.completionDate}
+ 9  | Director Appointment / Consent to Act             | ${d.incomingDirector}            | ${d.completionDate}
+
+Purchaser Copy`;
+
+  return { name: 'Completion Bible Index', filename: `Completion_Bible_Index_${d.targetCompany.replace(/\s/g,'_')}.txt`, content };
+}
+
+// ── AD-HOC DOCUMENT GENERATION ──
+async function generateAdhocDoc() {
+  const prompt = document.getElementById('adhoc-prompt').value.trim();
+  if (!prompt) { showNotif('Please describe what you want to generate', 'error'); return; }
+  if (!config.anthropicKey) { showNotif('Please set your Anthropic API key in Configuration', 'error'); return; }
+
+  const statusEl = document.getElementById('adhoc-status');
+  const resultEl = document.getElementById('adhoc-result');
+  statusEl.innerHTML = '<div class="ai-status"><div class="ai-status-header"><div class="ai-status-dot processing"></div><div class="ai-status-label">Generating…</div></div></div>';
+  resultEl.innerHTML = '';
+
+  try {
+    const d = await collectDealData();
+    const parties = await loadParties(currentDeal.id) || [];
+
+    const systemPrompt = `You are a corporate solicitor's assistant at a UK law firm. Generate professional legal correspondence and documents. Always use formal English law firm style. Use the deal details provided to auto-populate the document.`;
+
+    const userPrompt = `Generate the following document for this transaction:
+
+REQUEST: ${prompt}
+
+DEAL DETAILS:
+- Matter Reference: ${d.matterRef}
+- Transaction: ${currentDeal.deal_name}
+- Client Role: ${currentDeal.client_role}
+- Target Company: ${d.targetCompany} (Company No: ${d.targetCompanyNumber})
+- Buyer: ${d.buyerName}
+- Seller: ${d.sellerName}
+- Purchase Price: ${d.purchasePrice}
+- Completion Date: ${d.completionDate}
+- Current Stage: ${currentDeal.stage || 'In Progress'}
+- RAG Status: ${currentDeal.rag_status || 'Green'}
+- Priority: ${currentDeal.priority || 'Medium'}
+- Parties: ${parties.map(p => p.name + ' (' + p.role + ')').join(', ')}
+- Today's Date: ${d.today}
+
+Generate a complete, professional document ready for use. Use proper formatting with clear headings and structure.`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': config.anthropicKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 2000, messages: [{ role: 'user', content: userPrompt }], system: systemPrompt })
+    });
+
+    if (!response.ok) { const e = await response.json(); throw new Error(e.error?.message || 'API error'); }
+    const data = await response.json();
+    const generatedText = data.content[0].text;
+
+    statusEl.innerHTML = '<div class="ai-status" style="border-color:var(--green-border)"><div class="ai-status-header"><div class="ai-status-dot done"></div><div class="ai-status-label" style="color:var(--green)">Document generated</div></div></div>';
+
+    resultEl.innerHTML = `
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">Generated Document</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm" onclick="copyAdhocDoc()">Copy</button>
+          <button class="btn btn-primary btn-sm" onclick="downloadAdhocDoc()">↓ Download</button>
+        </div>
+      </div>
+      <div id="adhoc-doc-content" style="font-family:var(--font-mono);font-size:12px;line-height:1.8;color:var(--text);white-space:pre-wrap;border-top:1px solid var(--border);padding-top:1rem;max-height:400px;overflow-y:auto">${generatedText}</div>
+    </div>`;
+
+    window._adhocDoc = { text: generatedText, prompt };
+    showNotif('Document generated', 'success');
+
+  } catch(e) {
+    statusEl.innerHTML = `<div class="ai-status" style="border-color:var(--red-border)"><div class="ai-status-header"><div class="ai-status-dot error"></div><div class="ai-status-label" style="color:var(--red)">Error: ${e.message}</div></div></div>`;
+  }
+}
+
+function copyAdhocDoc() {
+  if (!window._adhocDoc) return;
+  navigator.clipboard.writeText(window._adhocDoc.text);
+  showNotif('Copied to clipboard', 'success');
+}
+
+function downloadAdhocDoc() {
+  if (!window._adhocDoc) return;
+  const blob = new Blob([window._adhocDoc.text], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'generated_document.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 
 // ═══════════════════════════════════════════════════════
 // GLOBAL SEARCH
