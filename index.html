@@ -3523,10 +3523,15 @@ async function generateAncillary(type) {
 
     // Add to results
     const existing = resultsEl.innerHTML === '' ? '' : resultsEl.innerHTML;
-    const b64 = result.blob
-      ? btoa(String.fromCharCode(...new Uint8Array(await result.blob.arrayBuffer())))
-      : btoa(encodeURIComponent(result.content));
-    const isBlob = !!result.blob;
+    const docId = 'doc_' + Date.now();
+    if (result.blob) {
+      window._ancillaryBlobs = window._ancillaryBlobs || {};
+      window._ancillaryBlobs[docId] = { blob: result.blob, filename: result.filename };
+    }
+    const b64 = result.blob ? null : btoa(encodeURIComponent(result.content));
+    const dlAttr = result.blob
+      ? `onclick="downloadAncillaryBlob('${docId}')"`
+      : `onclick="downloadAncillary('${result.filename}','${b64}')"`;
     resultsEl.innerHTML = existing + `
     <div class="generated-doc" style="margin-bottom:8px">
       <div class="generated-doc-info">
@@ -3537,7 +3542,7 @@ async function generateAncillary(type) {
         </div>
       </div>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-primary btn-sm" onclick="downloadAncillary('${result.filename}','${b64}',${isBlob})">↓ Download</button>
+        <button class="btn btn-primary btn-sm" ${dlAttr}>↓ Download</button>
       </div>
     </div>`;
 
@@ -3559,19 +3564,18 @@ async function generateAllAncillaries() {
   showNotif('All ancillaries generated', 'success');
 }
 
-function downloadAncillary(filename, b64content, isBlob) {
-  if (isBlob) {
-    // Direct blob download (e.g. STF)
-    const bytes = Uint8Array.from(atob(b64content), c => c.charCodeAt(0));
-    const blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = filename;
-    a.click(); URL.revokeObjectURL(url);
-  } else {
-    const text = decodeURIComponent(atob(b64content));
-    downloadAsDocx(text, filename);
-  }
+function downloadAncillaryBlob(docId) {
+  const entry = window._ancillaryBlobs && window._ancillaryBlobs[docId];
+  if (!entry) { showNotif('File not found — please regenerate', 'error'); return; }
+  const url = URL.createObjectURL(entry.blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = entry.filename;
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function downloadAncillary(filename, b64content) {
+  const text = decodeURIComponent(atob(b64content));
+  downloadAsDocx(text, filename);
 }
 
 // ── TEMPLATE FUNCTIONS ──
