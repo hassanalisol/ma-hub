@@ -3566,11 +3566,15 @@ async function generateAllAncillaries() {
 
 function downloadAncillaryBlob(docId) {
   const entry = window._ancillaryBlobs && window._ancillaryBlobs[docId];
-  if (!entry) { showNotif('File not found — please regenerate', 'error'); return; }
-  const url = URL.createObjectURL(entry.blob);
-  const a = document.createElement('a');
+  if (!entry) { showNotif("File not found u2014 please regenerate", "error"); return; }
+  const isPdf = entry.filename.endsWith(".pdf");
+  const mimeType = isPdf ? "application/pdf" : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  const typedBlob = new Blob([entry.blob], { type: mimeType });
+  const url = URL.createObjectURL(typedBlob);
+  const a = document.createElement("a");
   a.href = url; a.download = entry.filename;
-  a.click(); URL.revokeObjectURL(url);
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function downloadAncillary(filename, b64content) {
@@ -3582,7 +3586,226 @@ function downloadAncillary(filename, b64content) {
 // Each returns { name, filename, content } as plain text (formatted for Word paste or .txt)
 
 async function generateSTF(d) {
-  // Load the STF template and fill placeholders directly in the docx XML
+  // Generate STF as a PDF using jsPDF — avoids all Word XML corruption issues
+  if (!window.jspdf) {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+  }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  const sellerDisplay = (d.sellers && d.sellers.length > 1)
+    ? d.sellers.map(s => s.name).join(' and ')
+    : (d.sellerName || '[Seller Name]');
+  const sharesWords = d.numberOfSharesWords || '[Number of Shares in Words]';
+  const nomVal = d.nominalValue || '1.00';
+  const pageW = 210, pageH = 297;
+  const ml = 14, mr = 14, cw = pageW - ml - mr;
+
+  // ── helpers ──────────────────────────────────────────────────────────────
+  const box = (x,y,w,h) => doc.rect(x,y,w,h,'S');
+  const line = (x1,y1,x2,y2) => doc.line(x1,y1,x2,y2);
+  const txt = (t,x,y,opts={}) => {
+    doc.setFont('helvetica', opts.bold?'bold':'normal');
+    doc.setFontSize(opts.size||8);
+    doc.text(String(t||''), x, y, { maxWidth: opts.maxWidth||cw, ...opts.align&&{align:opts.align} });
+  };
+  const label = (t,x,y,w) => {
+    doc.setFont('helvetica','normal'); doc.setFontSize(6.5);
+    doc.setTextColor(80,80,80);
+    doc.text(t, x, y, { maxWidth: w||cw });
+    doc.setTextColor(0,0,0);
+  };
+  const field = (val,x,y,w,h=6) => {
+    doc.setFillColor(245,247,250);
+    doc.rect(x,y,w,h,'F');
+    doc.rect(x,y,w,h,'S');
+    doc.setFont('helvetica','normal'); doc.setFontSize(8);
+    doc.text(String(val||''), x+1.5, y+4, { maxWidth: w-3 });
+  };
+  const sectionHead = (t,y) => {
+    doc.setFillColor(30,58,95);
+    doc.rect(ml,y,cw,6,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFont('helvetica','bold'); doc.setFontSize(8);
+    doc.text(t, ml+2, y+4.3);
+    doc.setTextColor(0,0,0);
+    return y+6;
+  };
+
+  // ── TITLE ─────────────────────────────────────────────────────────────────
+  let y = 10;
+  doc.setFont('helvetica','bold'); doc.setFontSize(14);
+  doc.text('Stock Transfer Form', pageW/2, y, {align:'center'});
+  y += 5;
+  doc.setFont('helvetica','normal'); doc.setFontSize(8);
+  doc.setTextColor(100,100,100);
+  doc.text('Transfer by individual  |  Companies Act 2006  |  J30', pageW/2, y, {align:'center'});
+  doc.setTextColor(0,0,0);
+  y += 4;
+  doc.setDrawColor(30,58,95); doc.setLineWidth(0.5);
+  line(ml, y, ml+cw, y);
+  doc.setLineWidth(0.2); doc.setDrawColor(0,0,0);
+  y += 4;
+
+  // ── BANNER ────────────────────────────────────────────────────────────────
+  doc.setFillColor(248,249,252);
+  doc.rect(ml, y, cw, 5, 'F');
+  doc.setFont('helvetica','italic'); doc.setFontSize(7); doc.setTextColor(120,120,120);
+  doc.text('Above this line for Registrars only', ml+2, y+3.5);
+  doc.setTextColor(0,0,0); doc.setFont('helvetica','normal');
+  y += 7;
+
+  // ── CONSIDERATION ─────────────────────────────────────────────────────────
+  y = sectionHead('1. Consideration', y);
+  y += 2;
+  label('Consideration money (purchase price):', ml, y, 90);
+  y += 4;
+  field(d.purchasePrice || '[Purchase Price]', ml, y, 90);
+  label('Certificate lodged with the Registrar', ml+95, y-4, 87);
+  box(ml+95, y, 87, 6);
+  y += 10;
+
+  // ── COMPANY ───────────────────────────────────────────────────────────────
+  y = sectionHead('2. Full name of undertaking (company)', y);
+  y += 2;
+  field(`${d.targetCompany||'[Target Company]'} (Company No: ${d.targetCompanyNumber||'[Company Number]'})`, ml, y, cw);
+  y += 10;
+
+  // ── SECURITY ──────────────────────────────────────────────────────────────
+  y = sectionHead('3. Description of security', y);
+  y += 2;
+  label('Share class:', ml, y, 60);
+  label('Nominal value per share (£):', ml+65, y, 65);
+  y += 4;
+  field(d.shareClass||'[Share Class]', ml, y, 60);
+  field(`£${nomVal}`, ml+65, y, 60);
+  y += 10;
+
+  // ── NUMBER OF SHARES ──────────────────────────────────────────────────────
+  y = sectionHead('4. Number / amount of shares', y);
+  y += 2;
+  label('In words:', ml, y, 90);
+  label('In figures:', ml+95, y, 87);
+  y += 4;
+  field(sharesWords, ml, y, 90);
+  field(d.numberOfShares||'[Number of Shares]', ml+95, y, 87);
+  y += 10;
+
+  // ── TRANSFEROR ────────────────────────────────────────────────────────────
+  y = sectionHead('5. Name and address of registered holder (Transferor)', y);
+  y += 2;
+  label('Full name(s):', ml, y, 90);
+  y += 4;
+  field(sellerDisplay, ml, y, cw);
+  y += 8;
+  label('Address:', ml, y, cw);
+  y += 4;
+  field(d.sellerAddress||'', ml, y, cw, 10);
+  y += 14;
+
+  // ── TRANSFEREE ────────────────────────────────────────────────────────────
+  y = sectionHead('6. Name and address of person(s) to whom security is transferred (Transferee)', y);
+  y += 2;
+  label('Full name(s):', ml, y, 90);
+  y += 4;
+  field(d.buyerName||'[Buyer Name]', ml, y, cw);
+  y += 8;
+  label('Address:', ml, y, cw);
+  y += 4;
+  field(d.buyerAddress||'', ml, y, cw, 10);
+  y += 14;
+
+  // ── DECLARATION ───────────────────────────────────────────────────────────
+  y = sectionHead('7. Declaration', y);
+  y += 3;
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5);
+  const declText = 'I/we hereby transfer the above security out of the name(s) aforesaid to the person(s) named above, or to the several persons named in Parts 2 of Brokers Transfer Forms relating to the above security.';
+  const declLines = doc.splitTextToSize(declText, cw-4);
+  doc.text(declLines, ml+2, y);
+  y += declLines.length * 3.8 + 3;
+
+  // Signature blocks
+  const sigW = (cw-6)/2;
+  label('Signature(s) of transferor(s):', ml, y, sigW);
+  label('Date:', ml+sigW+6, y, sigW);
+  y += 4;
+  box(ml, y, sigW, 14);
+  box(ml+sigW+6, y, sigW, 14);
+  y += 18;
+
+  // ── STAMP DUTY CERTIFICATES ───────────────────────────────────────────────
+  y = sectionHead('8. Stamp Duty Certificate (complete Certificate 1 or 2 if applicable)', y);
+  y += 3;
+
+  // Certificate 1
+  doc.setFillColor(252,252,255);
+  doc.rect(ml, y, cw/2-2, 28, 'F');
+  doc.rect(ml, y, cw/2-2, 28, 'S');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
+  doc.text('Certificate 1', ml+2, y+4);
+  doc.setFont('helvetica','normal'); doc.setFontSize(7);
+  const cert1 = doc.splitTextToSize('I/We certify that the transaction effected by this instrument does not form part of a larger transaction or series of transactions for which the total consideration exceeds £1,000.', cw/2-8);
+  doc.text(cert1, ml+2, y+9);
+  label('Signature(s):', ml+2, y+22, cw/2-8);
+  line(ml+2, y+26, ml+cw/2-4, y+26);
+  y += 0;
+
+  // Certificate 2
+  const cx2 = ml+cw/2+2;
+  doc.setFillColor(252,252,255);
+  doc.rect(cx2, y, cw/2-2, 28, 'F');
+  doc.rect(cx2, y, cw/2-2, 28, 'S');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
+  doc.text('Certificate 2', cx2+2, y+4);
+  doc.setFont('helvetica','normal'); doc.setFontSize(7);
+  const cert2 = doc.splitTextToSize('I/We certify that this instrument is otherwise exempt from ad valorem Stamp Duty without a claim for relief being made.', cw/2-8);
+  doc.text(cert2, cx2+2, y+9);
+  label('Signature(s):', cx2+2, y+22, cw/2-8);
+  line(cx2+2, y+26, cx2+cw/2-4, y+26);
+  y += 32;
+
+  // ── NOTES ─────────────────────────────────────────────────────────────────
+  if (y < pageH - 25) {
+    y = sectionHead('Notes', y);
+    y += 3;
+    doc.setFont('helvetica','normal'); doc.setFontSize(7);
+    doc.setTextColor(80,80,80);
+    const notes = [
+      'You don\'t need to send this form to HMRC if you have completed either Certificate 1 or 2, or if no consideration (or nominal consideration only) was given.',
+      'In all other cases — including where relief from Stamp Duty is claimed — send the transfer form to HMRC to be stamped.',
+      'A body corporate should execute under its common seal or otherwise in accordance with applicable statutory requirements.'
+    ];
+    notes.forEach(n => {
+      const nl = doc.splitTextToSize(`• ${n}`, cw-4);
+      doc.text(nl, ml+2, y);
+      y += nl.length * 3.5 + 1.5;
+    });
+    doc.setTextColor(0,0,0);
+  }
+
+  // ── FOOTER ────────────────────────────────────────────────────────────────
+  doc.setDrawColor(30,58,95); doc.setLineWidth(0.4);
+  line(ml, pageH-12, ml+cw, pageH-12);
+  doc.setLineWidth(0.2); doc.setDrawColor(0,0,0);
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(120,120,120);
+  doc.text(`Matter: ${d.matterRef||''}  |  Generated: ${new Date().toLocaleDateString('en-GB')}`, ml, pageH-8);
+  doc.text('Stock Transfer Form (J30)', ml+cw, pageH-8, {align:'right'});
+  doc.setTextColor(0,0,0);
+
+  // ── Output ────────────────────────────────────────────────────────────────
+  const pdfBlob = doc.output('blob');
+  const filename = `STF_${(d.targetCompany||'Company').replace(/\s/g,'_')}.pdf`;
+
+  return {
+    name: 'Stock Transfer Form (J30)',
+    filename,
+    content: null,
+    blob: pdfBlob
+  };
+}
+
+async function generateSTF_UNUSED_DOCX(d) {
+  // KEPT FOR REFERENCE — docx version had Word XML corruption issues
   if (!window.JSZip) {
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
   }
