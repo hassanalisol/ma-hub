@@ -3601,16 +3601,20 @@ async function generateSTF(d) {
   const sharesWords = d.numberOfSharesWords || '[Number of Shares in Words]';
   const nomVal = d.nominalValue || '1.00';
 
-  xml = xml.replace(/\[Purchase Price\]/g, d.purchasePrice || '[Purchase Price]');
-  xml = xml.replace(/\[Target Company\]/g, d.targetCompany || '[Target Company]');
-  xml = xml.replace(/\[Company Number\]/g, d.targetCompanyNumber || '[Company Number]');
-  xml = xml.replace(/\[Share Class\]/g, d.shareClass || '[Share Class]');
-  xml = xml.replace(/\[Number of Shares in Words\]/g, sharesWords);
-  xml = xml.replace(/\[Seller Name\]/g, sellerDisplay);
-  xml = xml.replace(/\[Seller Address\]/g, d.sellerAddress || '');
-  xml = xml.replace(/\[Buyer Name\]/g, d.buyerName || '[Buyer Name]');
-  xml = xml.replace(/\[Buyer Address\]/g, d.buyerAddress || '');
-  xml = xml.replace(/\[Number of Shares\]/g, d.numberOfShares || '[Number of Shares]');
+  // XML-escape values before inserting into Word XML to prevent corruption
+  // (e.g. "&" in "Smith & Jones Ltd" must become "&amp;" in XML)
+  const xmlEsc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+
+  xml = xml.replace(/\[Purchase Price\]/g, xmlEsc(d.purchasePrice) || '[Purchase Price]');
+  xml = xml.replace(/\[Target Company\]/g, xmlEsc(d.targetCompany) || '[Target Company]');
+  xml = xml.replace(/\[Company Number\]/g, xmlEsc(d.targetCompanyNumber) || '[Company Number]');
+  xml = xml.replace(/\[Share Class\]/g, xmlEsc(d.shareClass) || '[Share Class]');
+  xml = xml.replace(/\[Number of Shares in Words\]/g, xmlEsc(sharesWords));
+  xml = xml.replace(/\[Seller Name\]/g, xmlEsc(sellerDisplay));
+  xml = xml.replace(/\[Seller Address\]/g, xmlEsc(d.sellerAddress || ''));
+  xml = xml.replace(/\[Buyer Name\]/g, xmlEsc(d.buyerName) || '[Buyer Name]');
+  xml = xml.replace(/\[Buyer Address\]/g, xmlEsc(d.buyerAddress || ''));
+  xml = xml.replace(/\[Number of Shares\]/g, xmlEsc(d.numberOfShares) || '[Number of Shares]');
 
   // Fragmented [Nominal Value] - use split/join to avoid regex escaping issues
   const nomFrag1 = '<w:t>[</w:t></w:r><w:proofErr w:type="gramEnd"/><w:r><w:rPr><w:bCs/></w:rPr><w:t>Nominal Value]</w:t>';
