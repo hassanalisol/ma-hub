@@ -312,9 +312,16 @@ tr:hover td{background:var(--bg3)}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         Dashboard
       </div>
-      <div class="nav-item" onclick="navigate('pipeline')" id="nav-pipeline">
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Pipelines</div>
+      <div class="nav-item" onclick="navigate('pipeline-spa')" id="nav-pipeline-spa">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-        Pipeline
+        SPA Pipeline
+      </div>
+      <div class="nav-item" onclick="navigate('pipeline-apa')" id="nav-pipeline-apa">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        APA Pipeline
       </div>
     </div>
     <div class="nav-section">
@@ -746,8 +753,183 @@ function getWorkflowStages(role) {
   ];
 }
 
-function getWorkflowState(checklist, role) {
-  const WORKFLOW_STAGES = getWorkflowStages(role || 'Buyer');
+// ═══════════════════════════════════════════════════════
+// APA WORKFLOW STAGES
+// ═══════════════════════════════════════════════════════
+function getAPAWorkflowStages(role) {
+  const isSeller = role === 'Seller';
+  return [
+    {
+      id: 'onboarding', label: 'Onboarding', pct: 0,
+      blockers: isSeller ? [
+        'Engagement letter / client care letter signed and returned',
+        'Conflict check completed',
+        'AML / KYC checks completed'
+      ] : [
+        'Engagement letter / client care letter signed and returned',
+        'Conflict check completed',
+        'AML / KYC checks completed',
+        'Source of funds — evidence received and reviewed'
+      ]
+    },
+    {
+      id: 'hot-nda', label: 'HOTs & NDA', pct: 10,
+      blockers: [
+        'HOTs agreed by all parties',
+        'Confidentiality / NDA agreement signed',
+        'Exclusivity agreement signed',
+        'Asset schedule — initial draft agreed'
+      ]
+    },
+    {
+      id: 'due-diligence', label: 'Due Diligence', pct: 20,
+      blockers: isSeller ? [
+        'Asset schedule finalised and agreed',
+        'LDDQ responses sent to Buyer',
+        'VDR access granted to Buyer solicitors',
+        'Lease reviewed — alienation provisions confirmed, landlord consent required',
+        'Licence to assign application submitted to landlord',
+        'Landlord\'s solicitors identified',
+        'Undertaking to landlord\'s solicitors given re costs (if required)',
+        'Landlord\'s requirements communicated to Buyer solicitors',
+        'References received from Buyer and passed to landlord\'s solicitors',
+        'Key contracts — consents to assign applications sent',
+        'TUPE — employee liability information prepared and sent to Buyer'
+      ] : [
+        'Asset schedule finalised and agreed',
+        'LDDQ sent to Seller solicitors',
+        'DD report submitted to client',
+        'Client approved DD report / confirmed instructions to proceed',
+        'Lease reviewed — reported to client',
+        'Lease report prepared and sent to client',
+        'Client confirms they are happy to take on the lease',
+        'Landlord\'s requirements / references received from Seller solicitors',
+        'References obtained from client and passed to landlord\'s solicitors',
+        'Licence to assign application submitted to landlord',
+        'Key contracts reviewed — assignment/novation requirements identified',
+        'Schedule of contracts to be assigned prepared and reviewed',
+        'TUPE — employee liability information received from Seller',
+        'Client advised on TUPE inherited liabilities'
+      ]
+    },
+    {
+      id: 'apa-drafting', label: 'APA Drafting', pct: 35,
+      blockers: isSeller ? [
+        'First draft APA received from Buyer solicitors',
+        'APA review report sent to client',
+        'Landlord\'s enquiries responded to',
+        'AGA requirement confirmed — yes/no',
+        'Novation agreements — counterparties identified and consents sent'
+      ] : [
+        'First draft APA prepared and sent to Seller solicitors',
+        'APA — client report and advice given',
+        'Landlord\'s enquiries answered',
+        'AGA requirement — client advised and instructions taken',
+        'TUPE — measures letter prepared and sent',
+        'Novation agreements — list prepared and sent to Seller'
+      ]
+    },
+    {
+      id: 'apa-agreed', label: 'APA Agreed', pct: 50,
+      blockers: isSeller ? [
+        'APA negotiations completed',
+        'APA in final agreed form',
+        'Client confirmed approval of final APA',
+        'Licence to assign agreed in final form',
+        'Landlord confirms approval in principle',
+        'AGA agreed in final form (if required)',
+        'All novation agreements agreed in final form',
+        'All IP assignment deeds agreed in final form'
+      ] : [
+        'APA negotiations completed',
+        'APA in final agreed form',
+        'Client confirmed approval of final APA',
+        'Licence to assign agreed in final form',
+        'Landlord confirms approval in principle',
+        'AGA agreed in final form (if required)',
+        'All novation agreements agreed in final form',
+        'All IP assignment deeds agreed in final form'
+      ]
+    },
+    {
+      id: 'ancillaries', label: 'Ancillaries', pct: 65,
+      blockers: isSeller ? [
+        'Seller board resolution drafted and approved by client',
+        'All consents to assign obtained'
+      ] : [
+        'Buyer board resolution drafted and approved by client',
+        'All required consents to assign obtained (or confirmed not applicable)'
+      ]
+    },
+    {
+      id: 'execution', label: 'Execution', pct: 80,
+      blockers: isSeller ? [
+        'Signed APA received from client',
+        'Signed seller board resolution received',
+        'Licence to assign executed by Seller',
+        'Licence to assign executed by Buyer',
+        'Licence to assign executed by Landlord',
+        'AGA executed by Seller (if required)',
+        'Novation agreements executed by Seller',
+        'Novation agreements executed by counterparties',
+        'IP assignment deeds executed by Seller'
+      ] : [
+        'Completion funds received into client account',
+        'Signed APA received from client',
+        'Signed buyer board resolution received',
+        'Licence to assign executed by Buyer',
+        'AGA executed by Buyer (if required)',
+        'Novation agreements executed by Buyer',
+        'IP assignment deeds executed by Buyer'
+      ]
+    },
+    {
+      id: 'completion', label: 'Completion', pct: 90,
+      blockers: isSeller ? [
+        'Sale proceeds received from Buyer into client account',
+        'Completion confirmed — all documents released',
+        'Dated licence to assign released to all parties',
+        'Notice of assignment served on landlord',
+        'Rent apportionment on completion confirmed'
+      ] : [
+        'Completion funds transferred to Seller',
+        'Completion confirmed by Seller solicitors',
+        'Dated licence to assign received',
+        'Notice of assignment served on landlord',
+        'Rent apportionment on completion agreed and paid'
+      ]
+    },
+    {
+      id: 'post-completion', label: 'Post-Completion', pct: 100,
+      blockers: isSeller ? [
+        'Sale proceeds sent to client',
+        'TUPE — final employee liability information provided to Buyer',
+        'VAT / TOGC — confirmed with client\'s accountants',
+        'Novation agreements dated and released to all parties',
+        'IP assignments registered at UKIPO where applicable',
+        'Copy of dated licence sent to client',
+        'Client advised that AGA liability continues until Buyer assigns (if AGA given)',
+        'Completion bible sent to client',
+        'File closed'
+      ] : [
+        'TUPE — notification letters sent to transferring employees',
+        'VAT / TOGC election filed with HMRC (if applicable)',
+        'AP1 filed at Land Registry to register transfer of lease (if registered title)',
+        'Land Registry fee paid',
+        'Notice of assignment registered at Land Registry (if required)',
+        'Novation agreements dated and released',
+        'IP assignments registered at UKIPO where applicable',
+        'Domain names and social media accounts transferred to Buyer',
+        'Completion bible sent to client',
+        'File closed'
+      ]
+    }
+  ];
+}
+
+function getWorkflowState(checklist, role, transactionType) {
+  const isAPA = transactionType === 'Asset Purchase';
+  const WORKFLOW_STAGES = isAPA ? getAPAWorkflowStages(role || 'Buyer') : getWorkflowStages(role || 'Buyer');
   // For each stage, check what % of its blockers are done in the checklist
   const stageStates = WORKFLOW_STAGES.map((stage, idx) => {
     const blockerStates = stage.blockers.map(blocker => {
@@ -781,7 +963,8 @@ async function renderWorkflowBar(dealId) {
   let checklist = [];
   try { checklist = await loadChecklist(dealId) || []; } catch(e) {}
   const role = currentDeal ? (currentDeal.client_role || 'Buyer') : 'Buyer';
-  const { stageStates, activeIdx, pct } = getWorkflowState(checklist, role);
+  const transactionType = currentDeal ? (currentDeal.transaction_type || '') : '';
+  const { stageStates, activeIdx, pct } = getWorkflowState(checklist, role, transactionType);
   const activeStage = stageStates[activeIdx];
 
   // Build stage dots + connectors
@@ -841,8 +1024,9 @@ async function renderWorkflowBar(dealId) {
 
 async function advanceWorkflowStage(currentIdx) {
   const role = currentDeal ? (currentDeal.client_role || 'Buyer') : 'Buyer';
-  const WORKFLOW_STAGES = getWorkflowStages(role);
-  // Mark all incomplete blockers in checklist as complete for current stage
+  const transactionType = currentDeal ? (currentDeal.transaction_type || '') : '';
+  const isAPA = transactionType === 'Asset Purchase';
+  const WORKFLOW_STAGES = isAPA ? getAPAWorkflowStages(role) : getWorkflowStages(role);
   const stage = WORKFLOW_STAGES[currentIdx];
   let checklist = [];
   try { checklist = await loadChecklist(currentDeal.id) || []; } catch(e) {}
@@ -858,8 +1042,8 @@ async function advanceWorkflowStage(currentIdx) {
   try {
     await Promise.all(updates.map(item => saveChecklistItem(item)));
 
-    // If advancing to Completion stage, auto-add CH deadline to critical dates
-    if (currentIdx === 7) { // Completion stage
+    // Only add Companies House deadline for SPA (not applicable for APA)
+    if (!isAPA && currentIdx === 7) {
       const completionDate = new Date();
       const chDeadline = new Date(completionDate);
       chDeadline.setDate(chDeadline.getDate() + 14);
@@ -876,7 +1060,6 @@ async function advanceWorkflowStage(currentIdx) {
     }
 
     showNotif('Stage advanced — checklist updated', 'success');
-    // Refresh the overview tab to re-render workflow bar
     switchDealTab('Overview');
   } catch(e) {
     showNotif('Error advancing stage: ' + e.message, 'error');
@@ -891,7 +1074,6 @@ function navigate(view, data = null) {
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   const navEl = document.getElementById(`nav-${view}`);
   if (navEl) navEl.classList.add('active');
-  // Persist state so page refresh returns to same view
   try {
     if (view === 'deal' && data) {
       localStorage.setItem('hub_state', JSON.stringify({ view, dealId: data.id }));
@@ -907,10 +1089,18 @@ function navigate(view, data = null) {
     document.getElementById('topbar-title').textContent = 'Dashboard';
     actions.innerHTML = `<button class="btn btn-primary" onclick="openNewDeal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Deal</button>`;
     renderDashboard();
+  } else if (view === 'pipeline-spa') {
+    document.getElementById('topbar-title').textContent = 'SPA Pipeline';
+    actions.innerHTML = `<button class="btn btn-primary" onclick="openNewDeal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Deal</button>`;
+    renderPipeline('SPA');
+  } else if (view === 'pipeline-apa') {
+    document.getElementById('topbar-title').textContent = 'APA Pipeline';
+    actions.innerHTML = `<button class="btn btn-primary" onclick="openNewDeal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Deal</button>`;
+    renderPipeline('APA');
   } else if (view === 'pipeline') {
     document.getElementById('topbar-title').textContent = 'Pipeline';
     actions.innerHTML = `<button class="btn btn-primary" onclick="openNewDeal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Deal</button>`;
-    renderPipeline();
+    renderPipeline('ALL');
   } else if (view === 'deal') {
     currentDeal = data;
     renderDealDetail(data);
@@ -998,26 +1188,41 @@ function renderDealCard(d) {
 // ═══════════════════════════════════════════════════════
 // PIPELINE VIEW
 // ═══════════════════════════════════════════════════════
-async function renderPipeline() {
+async function renderPipeline(type = 'ALL') {
   await loadDeals();
-  const stages = ['Pre-HOT','HOT Agreed','Due Diligence','SPA Drafting','SPA Agreed','Completing','Completed'];
+  const isSPA = type === 'SPA';
+  const isAPA = type === 'APA';
+
+  const spaStages = ['Pre-HOT','HOT Agreed','Due Diligence','SPA Drafting','SPA Agreed','Completing','Completed'];
+  const apaStages = ['Pre-HOT','HOT Agreed','Due Diligence','APA Drafting','APA Agreed','Completing','Completed'];
+  const stages = isAPA ? apaStages : spaStages;
+
+  const filteredDeals = deals.filter(d => {
+    if (isSPA) return !d.transaction_type || d.transaction_type !== 'Asset Purchase';
+    if (isAPA) return d.transaction_type === 'Asset Purchase';
+    return true;
+  });
+
+  const dealCard = d => `
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem;cursor:pointer;border-left:3px solid var(--${(d.rag_status||'Green').toLowerCase()==='green'?'green':(d.rag_status||'').toLowerCase()==='red'?'red':'amber'})" onclick="navigate('deal', ${JSON.stringify(d).replace(/"/g, '&quot;')})">
+    <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px">${d.deal_name}</div>
+    <div style="font-size:11px;color:var(--text3)">${d.client_name || '—'}</div>
+    ${d.transaction_type ? `<div style="font-size:10px;color:var(--text3);margin-top:3px">${d.transaction_type}</div>` : ''}
+    ${d.deal_value ? `<div style="font-size:12px;color:#2C5282;margin-top:6px">£${Number(d.deal_value).toLocaleString()}</div>` : ''}
+  </div>`;
+
   document.getElementById('content').innerHTML = `
   <div style="overflow-x:auto">
     <div style="display:grid;grid-template-columns:repeat(${stages.length},220px);gap:12px;min-width:${stages.length*232}px">
       ${stages.map(stage => {
-        const stageDeals = deals.filter(d => (d.stage || 'Pre-HOT') === stage);
+        const stageDeals = filteredDeals.filter(d => (d.stage || 'Pre-HOT') === stage);
         return `
         <div>
           <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;display:flex;justify-content:space-between">
             <span>${stage}</span><span class="badge badge-grey">${stageDeals.length}</span>
           </div>
           <div style="display:flex;flex-direction:column;gap:8px">
-            ${stageDeals.map(d => `
-            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem;cursor:pointer;border-left:3px solid var(--${(d.rag_status||'Green').toLowerCase()==='green'?'green':(d.rag_status||'').toLowerCase()==='red'?'red':'amber'})" onclick="navigate('deal', ${JSON.stringify(d).replace(/"/g, '&quot;')})">
-              <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px">${d.deal_name}</div>
-              <div style="font-size:11px;color:var(--text3)">${d.client_name || '—'}</div>
-              ${d.deal_value ? `<div style="font-size:12px;color:#2C5282;margin-top:6px">£${Number(d.deal_value).toLocaleString()}</div>` : ''}
-            </div>`).join('')}
+            ${stageDeals.length ? stageDeals.map(dealCard).join('') : '<div style="font-size:12px;color:var(--text3);font-style:italic;padding:8px 0">No deals</div>'}
           </div>
         </div>`;
       }).join('')}
@@ -1308,7 +1513,35 @@ async function switchDealTab(tab, el) {
 // ═══════════════════════════════════════════════════════
 function renderAITab() {
   const c = document.getElementById('deal-tab-content');
-  const hotStatus = extractedHOTData ? 'done' : 'idle';
+  const isAPA = currentDeal && currentDeal.transaction_type === 'Asset Purchase';
+
+  const spaAncillaries = [
+    {id:'stf', label:'Stock Transfer Form', icon:'📋'},
+    {id:'target_sole', label:'Target Board (Sole Director)', icon:'📄'},
+    {id:'target_mom', label:'Target Board Minutes (Multiple Directors)', icon:'📄'},
+    {id:'seller_mom', label:'Seller Board Minutes (Multiple Directors)', icon:'📄'},
+    {id:'buyer_mom', label:'Buyer Board Minutes', icon:'📄'},
+    {id:'dir_resignation', label:'Director Resignation Letter', icon:'✉️'},
+    {id:'psc_outgoing', label:'Outgoing PSC Letter', icon:'📩'},
+    {id:'psc_rle', label:'RLE Notification (Buyer PSC)', icon:'📩'},
+    {id:'indemnity', label:'Indemnity for Lost Share Certificate', icon:'🔒'},
+    {id:'bible_index', label:'Completion Bible Index', icon:'📚'},
+  ];
+
+  const apaAncillaries = [
+    {id:'apa_buyer_resolution', label:'Buyer Board Resolution (Asset Acquisition)', icon:'📄'},
+    {id:'apa_seller_resolution', label:'Seller Board Resolution (Asset Sale)', icon:'📄'},
+    {id:'bible_index', label:'Completion Bible Index', icon:'📚'},
+  ];
+
+  const ancillaries = isAPA ? apaAncillaries : spaAncillaries;
+  const phase2Label = isAPA ? 'Phase 2B — Asset Purchase Agreement' : 'Phase 2B — Share Purchase Agreement';
+  const phase2Desc = isAPA
+    ? 'Upload your APA to update the deal record with finalised figures and generate board resolutions.'
+    : 'Upload your SPA to update the deal record with finalised figures and generate ancillary documents.';
+  const phase3Desc = isAPA
+    ? 'Generate board resolutions for the asset purchase. Populated automatically from the deal record.'
+    : 'Generate all ancillary documents using your templates. Populated automatically from the deal record and SPA extraction.';
 
   c.innerHTML = `
   <div style="max-width:760px">
@@ -1341,10 +1574,10 @@ function renderAITab() {
       ${extractedHOTData ? renderExtractedData(extractedHOTData) : ''}
     </div>
 
-    <!-- PHASE 2B: SPA UPLOAD -->
+    <!-- PHASE 2B: SPA/APA UPLOAD -->
     <div class="ai-section">
-      <div class="ai-section-title">Phase 2B — Share Purchase Agreement</div>
-      <div style="font-size:13px;color:var(--text3);margin-bottom:1rem;line-height:1.6">Upload your SPA to update the deal record with finalised figures and generate ancillary documents.</div>
+      <div class="ai-section-title">${phase2Label}</div>
+      <div style="font-size:13px;color:var(--text3);margin-bottom:1rem;line-height:1.6">${phase2Desc}</div>
 
       <div class="upload-zone" id="spa-upload-zone" onclick="document.getElementById('spa-file-input').click()"
            ondragover="handleDragOver(event,'spa-upload-zone')" ondragleave="handleDragLeave(event,'spa-upload-zone')" ondrop="handleDrop(event,'spa')">
@@ -1352,7 +1585,7 @@ function renderAITab() {
         <div class="upload-zone-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
         </div>
-        <p id="spa-upload-label">${uploadedSPAFile ? uploadedSPAFile.name : 'Drop SPA here or click to upload'}</p>
+        <p id="spa-upload-label">${uploadedSPAFile ? uploadedSPAFile.name : `Drop ${isAPA ? 'APA' : 'SPA'} here or click to upload`}</p>
         <small>Accepts .docx or .pdf</small>
       </div>
 
@@ -1360,7 +1593,7 @@ function renderAITab() {
       <div style="margin-top:12px;display:flex;gap:10px">
         <button class="btn btn-ai" onclick="runSPAExtraction()" id="spa-extract-btn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          Update from SPA
+          Update from ${isAPA ? 'APA' : 'SPA'}
         </button>
         <button class="btn btn-secondary btn-sm" onclick="clearSPA()">Clear</button>
       </div>` : ''}
@@ -1372,7 +1605,7 @@ function renderAITab() {
     <div class="ai-section" id="generated-docs-section" style="${extractedHOTData ? '' : 'display:none'}">
       <div class="ai-section-title">Phase 2B Results — Board Resolutions</div>
       <div id="generated-docs-list">
-        <div style="font-size:13px;color:var(--text3)">Upload the SPA to generate board resolutions.</div>
+        <div style="font-size:13px;color:var(--text3)">Upload the ${isAPA ? 'APA' : 'SPA'} to generate board resolutions.</div>
       </div>
     </div>
 
@@ -1380,23 +1613,12 @@ function renderAITab() {
     <div class="ai-section" id="ancillary-section">
       <div class="ai-section-title">Phase 3 — Ancillary Documents</div>
       <div style="font-size:13px;color:var(--text3);margin-bottom:1.25rem;line-height:1.6">
-        Generate all ancillary documents using your templates. Populated automatically from the deal record and SPA extraction.
-        ${window._spaData ? '' : '<br><span style="color:var(--amber)">⚠ Upload and process the SPA first for full auto-population.</span>'}
+        ${phase3Desc}
+        ${!isAPA && !window._spaData ? '<br><span style="color:var(--amber)">⚠ Upload and process the SPA first for full auto-population.</span>' : ''}
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.25rem">
-        ${[
-          {id:'stf', label:'Stock Transfer Form', icon:'📋'},
-          {id:'target_sole', label:'Target Board (Sole Director)', icon:'📄'},
-          {id:'target_mom', label:'Target Board Minutes (Multiple Directors)', icon:'📄'},
-          {id:'seller_mom', label:'Seller Board Minutes (Multiple Directors)', icon:'📄'},
-          {id:'buyer_mom', label:'Buyer Board Minutes', icon:'📄'},
-          {id:'dir_resignation', label:'Director Resignation Letter', icon:'✉️'},
-          {id:'psc_outgoing', label:'Outgoing PSC Letter', icon:'📩'},
-          {id:'psc_rle', label:'RLE Notification (Buyer PSC)', icon:'📩'},
-          {id:'indemnity', label:'Indemnity for Lost Share Certificate', icon:'🔒'},
-          {id:'bible_index', label:'Completion Bible Index', icon:'📚'},
-        ].map(d => `
+        ${ancillaries.map(d => `
         <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px 14px;display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:13px;color:var(--text)">${d.icon} ${d.label}</span>
           <button class="btn btn-primary btn-sm" onclick="generateAncillary('${d.id}')">Generate</button>
@@ -2426,13 +2648,19 @@ async function updateDealProgress() {
 }
 
 async function loadChecklistTemplate(role) {
-  const items = role === 'buyer' ? getBuyerChecklist() : getSellerChecklist();
+  const isAPA = currentDeal && currentDeal.transaction_type === 'Asset Purchase';
+  let items;
+  if (isAPA) {
+    items = role === 'buyer' ? getAPABuyerChecklist() : getAPASellerChecklist();
+  } else {
+    items = role === 'buyer' ? getBuyerChecklist() : getSellerChecklist();
+  }
   try {
     for (let i = 0; i < items.length; i++) {
       await saveChecklistItem({ ...items[i], deal_id: currentDeal.id, order_index: i });
     }
     await switchDealTab('Checklist');
-    showNotif(`${capitalize(role)} checklist loaded`, 'success');
+    showNotif(`${capitalize(role)} ${isAPA ? 'APA' : 'SPA'} checklist loaded`, 'success');
   } catch(e) { showNotif('Failed to load template: ' + e.message, 'error'); }
 }
 
@@ -2664,6 +2892,225 @@ function getSellerChecklist() {
 }
 
 // ═══════════════════════════════════════════════════════
+// APA BUYER CHECKLIST
+// ═══════════════════════════════════════════════════════
+function getAPABuyerChecklist() {
+  return [
+    // CLIENT ONBOARDING
+    { milestone: 'Engagement letter / client care letter signed and returned', category: 'Client Onboarding', responsible: 'Client', completed: false },
+    { milestone: 'Conflict check completed', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
+    { milestone: 'AML / KYC checks completed', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
+    { milestone: 'Source of funds — initial enquiry made with client', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
+    { milestone: 'Source of funds — evidence received and reviewed', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client authorised to give instructions (board authority confirmed if corporate buyer)', category: 'Client Onboarding', responsible: 'Client', completed: false },
+    // PRE-TRANSACTION
+    { milestone: 'Seller solicitors identified and details confirmed', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'HOTs received from Seller or sent to Seller', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'HOTs reviewed and reported to client', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'HOTs agreed by all parties', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'Confidentiality / NDA agreement reviewed and signed', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'Exclusivity agreement reviewed and signed', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'Asset schedule — initial draft received and reviewed', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    // DUE DILIGENCE
+    { milestone: 'LDDQ sent to Seller solicitors', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Asset schedule finalised and agreed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Title to assets reviewed (ownership confirmed, no third party claims)', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Key contracts reviewed — change of control / assignment provisions identified', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Consents to assign required — list prepared and sent to Seller', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Assignment of contracts — schedule of contracts to be assigned prepared and reviewed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Novation agreements required — list prepared', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Assignment of intellectual property — formal assignment deeds required confirmed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Assignment of domain names and social media accounts confirmed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Employment contracts reviewed — TUPE obligations confirmed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'TUPE — employee liability information received from Seller', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client advised on TUPE inherited liabilities', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'IP ownership confirmed — trade marks, domain names, software, know-how', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Goodwill — non-compete provisions in APA reviewed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Stock — valuation mechanism agreed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Book debts — position agreed (included/excluded)', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'IT / data review — GDPR data processor agreements reviewed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Regulatory licences — transferability confirmed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'DD report drafted and submitted to client', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client approved DD report / confirmed instructions to proceed', category: 'Due Diligence', responsible: 'Client', completed: false },
+    // LEASE ASSIGNMENT
+    { milestone: 'Lease reviewed — title, term, rent, break clauses, repairing obligations reported to client', category: 'Lease Assignment', responsible: 'Solicitor', completed: false },
+    { milestone: 'Lease report prepared and sent to client', category: 'Lease Assignment', responsible: 'Solicitor', completed: false },
+    { milestone: 'Alienation provisions reviewed — landlord consent confirmed required', category: 'Lease Assignment', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client confirms they are happy to take on the lease', category: 'Lease Assignment', responsible: 'Client', completed: false },
+    { milestone: 'Landlord\'s requirements / references received from Seller solicitors', category: 'Lease Assignment', responsible: 'Solicitor', completed: false },
+    { milestone: 'References obtained from client (bank, accountant, previous landlord)', category: 'Lease Assignment', responsible: 'Solicitor', completed: false },
+    { milestone: 'References passed to Seller solicitors / landlord\'s solicitors directly', category: 'Lease Assignment', responsible: 'Solicitor', completed: false },
+    { milestone: 'Licence to assign application submitted to landlord', category: 'Lease Assignment', responsible: 'Solicitor', completed: false },
+    { milestone: 'Property searches ordered (if required)', category: 'Lease Assignment', responsible: 'Solicitor', completed: false },
+    { milestone: 'Replies to landlord\'s enquiries provided', category: 'Lease Assignment', responsible: 'Solicitor', completed: false },
+    { milestone: 'AGA requirement — client advised and instructions taken', category: 'Lease Assignment', responsible: 'Solicitor', completed: false },
+    { milestone: 'Rent deposit — position agreed (new deposit or transfer of existing)', category: 'Lease Assignment', responsible: 'Solicitor', completed: false },
+    { milestone: 'Guarantor requirements confirmed', category: 'Lease Assignment', responsible: 'Solicitor', completed: false },
+    { milestone: 'Landlord satisfied with references and requirements', category: 'Lease Assignment', responsible: 'Solicitor', completed: false },
+    // APA DRAFTING
+    { milestone: 'First draft APA prepared and sent to Seller solicitors', category: 'APA Drafting', responsible: 'Solicitor', completed: false },
+    { milestone: 'APA — client report and advice given (assets, warranties, indemnities, price mechanics)', category: 'APA Drafting', responsible: 'Solicitor', completed: false },
+    { milestone: 'Landlord\'s enquiries answered', category: 'APA Drafting', responsible: 'Solicitor', completed: false },
+    { milestone: 'TUPE — measures letter prepared and sent to appropriate representatives', category: 'APA Drafting', responsible: 'Solicitor', completed: false },
+    { milestone: 'APA negotiations commenced', category: 'APA Drafting', responsible: 'Solicitor', completed: false },
+    // APA AGREED
+    { milestone: 'APA negotiations completed', category: 'APA Agreed', responsible: 'Solicitor', completed: false },
+    { milestone: 'APA in final agreed form', category: 'APA Agreed', responsible: 'Solicitor', completed: false },
+    { milestone: 'Licence to assign agreed in final form', category: 'APA Agreed', responsible: 'Solicitor', completed: false },
+    { milestone: 'Landlord confirms approval in principle', category: 'APA Agreed', responsible: 'Solicitor', completed: false },
+    { milestone: 'AGA agreed in final form (if required)', category: 'APA Agreed', responsible: 'Solicitor', completed: false },
+    { milestone: 'All novation agreements agreed in final form', category: 'APA Agreed', responsible: 'Solicitor', completed: false },
+    { milestone: 'All IP assignment deeds agreed in final form', category: 'APA Agreed', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client given final APA for approval before signing', category: 'APA Agreed', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client confirmed approval of final APA', category: 'APA Agreed', responsible: 'Client', completed: false },
+    // ANCILLARIES
+    { milestone: 'Buyer board resolution drafted', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    { milestone: 'Buyer board resolution approved by client', category: 'Ancillaries', responsible: 'Client', completed: false },
+    { milestone: 'All required consents to assign obtained (or confirmed not applicable)', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    // EXECUTION
+    { milestone: 'Completion funds received into client account', category: 'Execution', responsible: 'Client', completed: false },
+    { milestone: 'Signed APA received from client', category: 'Execution', responsible: 'Client', completed: false },
+    { milestone: 'Signed buyer board resolution received', category: 'Execution', responsible: 'Client', completed: false },
+    { milestone: 'Licence to assign executed by Buyer', category: 'Execution', responsible: 'Client', completed: false },
+    { milestone: 'AGA executed by Buyer (if required)', category: 'Execution', responsible: 'Client', completed: false },
+    { milestone: 'Rent deposit deed executed (if required)', category: 'Execution', responsible: 'Client', completed: false },
+    { milestone: 'Novation agreements executed by Buyer', category: 'Execution', responsible: 'Client', completed: false },
+    { milestone: 'IP assignment deeds executed by Buyer', category: 'Execution', responsible: 'Client', completed: false },
+    // COMPLETION
+    { milestone: 'Completion funds transferred to Seller', category: 'Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Completion confirmed by Seller solicitors', category: 'Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Dated licence to assign received', category: 'Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Notice of assignment served on landlord', category: 'Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Rent apportionment on completion agreed and paid', category: 'Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client notified that completion has occurred', category: 'Completion', responsible: 'Solicitor', completed: false },
+    // POST-COMPLETION
+    { milestone: 'TUPE — notification letters sent to transferring employees', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'VAT / TOGC election filed with HMRC (if applicable)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'AP1 filed at Land Registry to register transfer of lease (if registered title)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Land Registry fee paid', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Notice of assignment registered at Land Registry (if required)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Landlord\'s registration fee paid', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Acknowledgement of notice received from landlord', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Copy of dated licence sent to client', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Lease obligations — client reminded of repairing and insurance obligations from completion', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Novation agreements dated and released', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'IP assignments registered at UKIPO / Companies House where applicable', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Domain names and social media accounts transferred to Buyer', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Counterparties notified of assignment of their contracts', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Completion bible prepared and sent to client', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'File closed', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+  ];
+}
+
+// ═══════════════════════════════════════════════════════
+// APA SELLER CHECKLIST
+// ═══════════════════════════════════════════════════════
+function getAPASellerChecklist() {
+  return [
+    // CLIENT ONBOARDING
+    { milestone: 'Engagement letter / client care letter signed and returned', category: 'Client Onboarding', responsible: 'Client', completed: false },
+    { milestone: 'Conflict check completed', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
+    { milestone: 'AML / KYC checks completed', category: 'Client Onboarding', responsible: 'Solicitor', completed: false },
+    // PRE-TRANSACTION
+    { milestone: 'Buyer solicitors identified and details confirmed', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'HOTs received from Buyer or sent to Buyer', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'HOTs reviewed and reported to client', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'HOTs agreed by all parties', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'Confidentiality / NDA agreement signed', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'Exclusivity agreement signed', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    { milestone: 'Asset schedule — initial draft prepared with client', category: 'Pre-Transaction', responsible: 'Solicitor', completed: false },
+    // DUE DILIGENCE
+    { milestone: 'LDDQ received from Buyer solicitors', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'LDDQ reviewed and discussed with client', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'LDDQ responses sent to Buyer', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Asset schedule finalised and agreed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Title to assets confirmed — client confirms ownership free of encumbrances', category: 'Due Diligence', responsible: 'Client', completed: false },
+    { milestone: 'Registered charges over assets — search completed and reported', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Key contracts — client confirms which are being assigned', category: 'Due Diligence', responsible: 'Client', completed: false },
+    { milestone: 'Assignment of contracts — schedule of contracts to be assigned agreed with client', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Consents to assign required — applications made to counterparties', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Novation agreements required — counterparties identified and consent applications sent', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Responses to novation requests received and reported to client', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'IP assignments — formal assignment deeds required confirmed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Domain names and social media accounts — transfer process agreed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Employment contracts — list of transferring employees prepared', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'TUPE — employee liability information prepared and sent to Buyer', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'IP — title confirmed and any registrations noted', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Stock — valuation mechanism agreed with client', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Book debts — position agreed (included/excluded)', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'VDR access granted to Buyer solicitors', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    // LEASE ASSIGNMENT
+    { milestone: 'Lease reviewed — alienation provisions confirmed, landlord consent required', category: 'Lease Assignment', responsible: 'Solicitor', completed: false },
+    { milestone: 'Undertaking to landlord\'s solicitors given re costs (if required)', category: 'Lease Assignment', responsible: 'Solicitor', completed: false },
+    { milestone: 'Landlord\'s requirements / references requested from landlord\'s solicitors', category: 'Lease Assignment', responsible: 'Solicitor', completed: false },
+    { milestone: 'Landlord\'s requirements communicated to Buyer solicitors', category: 'Lease Assignment', responsible: 'Solicitor', completed: false },
+    { milestone: 'References and details received from Buyer / Buyer\'s solicitors', category: 'Lease Assignment', responsible: 'Solicitor', completed: false },
+    { milestone: 'References passed to landlord\'s solicitors', category: 'Lease Assignment', responsible: 'Solicitor', completed: false },
+    { milestone: 'Licence to assign application submitted to landlord', category: 'Lease Assignment', responsible: 'Solicitor', completed: false },
+    { milestone: 'Landlord\'s solicitors identified', category: 'Lease Assignment', responsible: 'Solicitor', completed: false },
+    { milestone: 'AGA requirement confirmed — yes/no', category: 'Lease Assignment', responsible: 'Solicitor', completed: false },
+    { milestone: 'Dilapidations — client advised of potential liability on assignment', category: 'Lease Assignment', responsible: 'Solicitor', completed: false },
+    { milestone: 'Rent deposit — transfer or release agreed', category: 'Lease Assignment', responsible: 'Solicitor', completed: false },
+    { milestone: 'Landlord satisfied with references and requirements', category: 'Lease Assignment', responsible: 'Solicitor', completed: false },
+    // APA DRAFTING
+    { milestone: 'First draft APA received from Buyer solicitors', category: 'APA Drafting', responsible: 'Solicitor', completed: false },
+    { milestone: 'APA reviewed by solicitor', category: 'APA Drafting', responsible: 'Solicitor', completed: false },
+    { milestone: 'APA review report sent to client — warranties, indemnities, price mechanics', category: 'APA Drafting', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client instructions received on APA', category: 'APA Drafting', responsible: 'Client', completed: false },
+    { milestone: 'Landlord\'s enquiries responded to', category: 'APA Drafting', responsible: 'Solicitor', completed: false },
+    { milestone: 'TUPE — measures letter received from Buyer and reviewed', category: 'APA Drafting', responsible: 'Solicitor', completed: false },
+    { milestone: 'APA negotiations commenced', category: 'APA Drafting', responsible: 'Solicitor', completed: false },
+    // APA AGREED
+    { milestone: 'APA negotiations completed', category: 'APA Agreed', responsible: 'Solicitor', completed: false },
+    { milestone: 'APA in final agreed form', category: 'APA Agreed', responsible: 'Solicitor', completed: false },
+    { milestone: 'Licence to assign agreed in final form', category: 'APA Agreed', responsible: 'Solicitor', completed: false },
+    { milestone: 'Landlord confirms approval in principle', category: 'APA Agreed', responsible: 'Solicitor', completed: false },
+    { milestone: 'AGA agreed in final form (if required)', category: 'APA Agreed', responsible: 'Solicitor', completed: false },
+    { milestone: 'Dilapidations — schedule agreed or position noted', category: 'APA Agreed', responsible: 'Solicitor', completed: false },
+    { milestone: 'All novation agreements agreed in final form', category: 'APA Agreed', responsible: 'Solicitor', completed: false },
+    { milestone: 'All IP assignment deeds agreed in final form', category: 'APA Agreed', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client given final APA for approval before signing', category: 'APA Agreed', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client confirmed approval of final APA', category: 'APA Agreed', responsible: 'Client', completed: false },
+    // ANCILLARIES
+    { milestone: 'Seller board resolution drafted', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    { milestone: 'Seller board resolution approved by client', category: 'Ancillaries', responsible: 'Client', completed: false },
+    { milestone: 'All consents to assign obtained', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    // EXECUTION
+    { milestone: 'Execution copies of all documents sent to client', category: 'Execution', responsible: 'Solicitor', completed: false },
+    { milestone: 'Signed APA received from client', category: 'Execution', responsible: 'Client', completed: false },
+    { milestone: 'Signed seller board resolution received', category: 'Execution', responsible: 'Client', completed: false },
+    { milestone: 'Licence to assign executed by Seller', category: 'Execution', responsible: 'Client', completed: false },
+    { milestone: 'Licence to assign executed by Buyer', category: 'Execution', responsible: 'Solicitor', completed: false },
+    { milestone: 'Licence to assign executed by Landlord', category: 'Execution', responsible: 'Solicitor', completed: false },
+    { milestone: 'AGA executed by Seller (if required as outgoing tenant guarantee)', category: 'Execution', responsible: 'Client', completed: false },
+    { milestone: 'Rent deposit — transfer deed executed (if applicable)', category: 'Execution', responsible: 'Solicitor', completed: false },
+    { milestone: 'Novation agreements executed by Seller', category: 'Execution', responsible: 'Client', completed: false },
+    { milestone: 'Novation agreements executed by counterparties', category: 'Execution', responsible: 'Solicitor', completed: false },
+    { milestone: 'IP assignment deeds executed by Seller', category: 'Execution', responsible: 'Client', completed: false },
+    // COMPLETION
+    { milestone: 'Sale proceeds received from Buyer into client account', category: 'Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Completion confirmed — all documents released', category: 'Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Dated licence to assign released to all parties', category: 'Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Notice of assignment served on landlord', category: 'Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Rent apportionment on completion confirmed and received', category: 'Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client notified that completion has occurred', category: 'Completion', responsible: 'Solicitor', completed: false },
+    // POST-COMPLETION
+    { milestone: 'Sale proceeds sent to client', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'TUPE — final employee liability information provided to Buyer', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'VAT / TOGC — confirmed with client\'s accountants', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Copy of dated licence sent to client', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Client advised that AGA liability continues until Buyer assigns (if AGA given)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Rent deposit released to Seller (if applicable)', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Novation agreements dated and released to all parties', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'IP assignments registered at UKIPO where applicable', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Domain names and social media accounts transferred', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Counterparties notified of completed assignments', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'Completion bible prepared and sent to client', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+    { milestone: 'File closed', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
+  ];
+}
+
+// ═══════════════════════════════════════════════════════
 // MODALS — DEAL CRUD
 // ═══════════════════════════════════════════════════════
 function openNewDeal() {
@@ -2748,8 +3195,18 @@ async function submitNewDeal() {
     const result = await saveDeal(deal);
     const newDealId = result[0].id;
 
-    // Pre-populate standard critical dates
-    const standardDates = [
+    // Pre-populate standard critical dates based on transaction type
+    const isAPA = deal.transaction_type === 'Asset Purchase';
+    const standardDates = isAPA ? [
+      'HOTs Signed', 'CA/NDA Signed', 'Exclusivity Signed', 'Exclusivity Expiry',
+      'DD Report Signed Off', 'APA Agreed', 'All Ancillaries Agreed',
+      'Licence to Assign Application Submitted', 'Landlord Response Deadline',
+      'Licence to Assign Agreed', 'Licence to Assign Executed',
+      'Novation Consent Deadline', 'IP Assignment Registration Deadline',
+      'Completion', 'TUPE Notification Deadline',
+      'VAT/TOGC Election Deadline', 'Notice of Assignment Served',
+      'Land Registry Registration Deadline', 'File Closed'
+    ] : [
       'HOTs Signed', 'CA/NDA Signed', 'Exclusivity Signed', 'Exclusivity Expiry',
       'DD Bundle Received', 'DD Report Signed Off', 'SPA Agreed',
       'Disclosure Letter Approved', 'All Ancillaries Agreed', 'Completion',
@@ -3516,6 +3973,8 @@ async function generateAncillary(type) {
       case 'psc_rle': result = await generateRLE(d); break;
       case 'indemnity': result = await generateIndemnity(d); break;
       case 'bible_index': result = await generateBibleIndex(d); break;
+      case 'apa_buyer_resolution': result = await generateAPABuyerResolution(d); break;
+      case 'apa_seller_resolution': result = await generateAPASellerResolution(d); break;
       default: throw new Error('Unknown document type');
     }
 
@@ -3555,7 +4014,10 @@ async function generateAncillary(type) {
 }
 
 async function generateAllAncillaries() {
-  const types = ['stf','target_sole','target_mom','seller_mom','buyer_mom','dir_resignation','psc_outgoing','psc_rle','indemnity','bible_index'];
+  const isAPA = currentDeal && currentDeal.transaction_type === 'Asset Purchase';
+  const types = isAPA
+    ? ['apa_buyer_resolution', 'apa_seller_resolution', 'bible_index']
+    : ['stf','target_sole','target_mom','seller_mom','buyer_mom','dir_resignation','psc_outgoing','psc_rle','indemnity','bible_index'];
   document.getElementById('ancillary-results').innerHTML = '';
   for (const t of types) {
     await generateAncillary(t);
@@ -4144,7 +4606,76 @@ Purchaser Copy`;
   return { name: 'Completion Bible Index', filename: `Completion_Bible_Index_${d.targetCompany.replace(/\s/g,'_')}.txt`, content };
 }
 
-// ── AD-HOC DOCUMENT GENERATION ──
+// ── APA ANCILLARY GENERATORS ──
+async function generateAPABuyerResolution(d) {
+  if (!config.anthropicKey) throw new Error('Anthropic API key not set — please add it in Configuration');
+  const prompt = `You are a UK corporate solicitor. Draft a board resolution for the following asset acquisition. The resolution must be suitable for a private limited company and follow standard UK corporate practice.
+
+Deal details:
+- Buyer: ${d.buyerName || '[Buyer Name]'}
+- Target / Seller: ${d.sellerName || '[Seller Name]'}
+- Description of assets: ${d.targetCompany ? `The business and assets of ${d.targetCompany}` : '[Description of Assets]'}
+- Purchase price: ${d.purchasePrice ? '£' + d.purchasePrice : '[Purchase Price]'}
+- Completion date: ${d.completionDate || '[Completion Date]'}
+
+Draft a WRITTEN RESOLUTION OF THE BOARD OF DIRECTORS approving the asset acquisition. Include:
+1. Recitals identifying the APA and the assets being acquired
+2. Resolution approving entry into the Asset Purchase Agreement
+3. Resolution authorising a named director (leave as [Director Name]) to sign all documents and do all things necessary to complete the acquisition
+4. Resolution approving the payment of the purchase price from company funds
+
+Format as a clean Word-style document. Do not include any commentary or explanation — output only the resolution text.`;
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': config.anthropicKey, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1500, messages: [{ role: 'user', content: prompt }] })
+  });
+  if (!response.ok) throw new Error('Claude API error: ' + response.status);
+  const data = await response.json();
+  const content = data.content[0].text;
+  return {
+    name: 'Buyer Board Resolution (Asset Acquisition)',
+    filename: `APA_Buyer_Board_Resolution_${(d.targetCompany || 'Assets').replace(/\s+/g,'_')}.txt`,
+    content
+  };
+}
+
+async function generateAPASellerResolution(d) {
+  if (!config.anthropicKey) throw new Error('Anthropic API key not set — please add it in Configuration');
+  const prompt = `You are a UK corporate solicitor. Draft a board resolution for the following asset disposal. The resolution must be suitable for a private limited company and follow standard UK corporate practice.
+
+Deal details:
+- Seller: ${d.sellerName || '[Seller Name]'}
+- Buyer: ${d.buyerName || '[Buyer Name]'}
+- Description of assets: ${d.targetCompany ? `The business and assets of ${d.targetCompany}` : '[Description of Assets]'}
+- Purchase price: ${d.purchasePrice ? '£' + d.purchasePrice : '[Purchase Price]'}
+- Completion date: ${d.completionDate || '[Completion Date]'}
+
+Draft a WRITTEN RESOLUTION OF THE BOARD OF DIRECTORS approving the asset sale. Include:
+1. Recitals identifying the APA and the assets being sold
+2. Resolution approving entry into the Asset Purchase Agreement
+3. Resolution authorising a named director (leave as [Director Name]) to sign all documents and do all things necessary to complete the sale
+4. Resolution approving the distribution or retention of sale proceeds in accordance with the company's constitution
+
+Format as a clean Word-style document. Do not include any commentary or explanation — output only the resolution text.`;
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': config.anthropicKey, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1500, messages: [{ role: 'user', content: prompt }] })
+  });
+  if (!response.ok) throw new Error('Claude API error: ' + response.status);
+  const data = await response.json();
+  const content = data.content[0].text;
+  return {
+    name: 'Seller Board Resolution (Asset Sale)',
+    filename: `APA_Seller_Board_Resolution_${(d.targetCompany || 'Assets').replace(/\s+/g,'_')}.txt`,
+    content
+  };
+}
+
+
 async function generateAdhocDoc() {
   const prompt = document.getElementById('adhoc-prompt').value.trim();
   if (!prompt) { showNotif('Please describe what you want to generate', 'error'); return; }
