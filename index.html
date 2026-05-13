@@ -639,14 +639,16 @@ function getWorkflowStages(role) {
     {
       id: 'onboarding', label: 'Onboarding', pct: 0,
       blockers: isSeller ? [
+        'Engagement letter / client care letter sent to client',
         'Engagement letter / client care letter signed and returned',
         'Conflict check completed',
         'AML / KYC checks completed'
       ] : [
-        'Engagement letter / client care letter signed and returned',
         'Conflict check completed',
         'AML / KYC checks completed for client',
-        'Source of funds — evidence received and reviewed'
+        'Source of funds — initial enquiry made with client',
+        'Source of funds — reviewed or deferred',
+        'Client authorised to give instructions (board authority confirmed if corporate buyer)'
       ]
     },
     {
