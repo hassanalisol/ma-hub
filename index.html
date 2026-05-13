@@ -3587,20 +3587,34 @@ async function generateSTF(d) {
   }
 
   // Fetch template from Supabase Storage
-  // Try authenticated fetch first, fall back to public URL
-  const templateUrl = `${config.supabaseUrl}/storage/v1/object/public/deal-documents/templates/STF_template.docx`;
-  let res = await fetch(templateUrl);
-  if (!res.ok) {
-    // Fall back to authenticated endpoint
-    const authUrl = `${config.supabaseUrl}/storage/v1/object/deal-documents/templates/STF_template.docx`;
-    res = await fetch(authUrl, {
-      headers: {
-        'apikey': config.supabaseKey,
-        'Authorization': `Bearer ${config.supabaseKey}`
-      }
-    });
+  // Build base URL — strip any trailing slash
+  const baseUrl = (config.supabaseUrl || '').replace(/\/$/, '');
+  if (!baseUrl) throw new Error('Supabase URL not configured — please set it in Configuration');
+
+  // First get a signed URL via the Supabase API (works regardless of bucket public/private)
+  const signedUrlRes = await fetch(`${baseUrl}/storage/v1/object/sign/deal-documents/templates/STF_template.docx`, {
+    method: 'POST',
+    headers: {
+      'apikey': config.supabaseKey,
+      'Authorization': `Bearer ${config.supabaseKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ expiresIn: 60 })
+  });
+
+  let res;
+  if (signedUrlRes.ok) {
+    const { signedURL } = await signedUrlRes.json();
+    res = await fetch(`${baseUrl}${signedURL}`);
+  } else {
+    // Fall back: try public URL directly
+    res = await fetch(`${baseUrl}/storage/v1/object/public/deal-documents/templates/STF_template.docx`);
   }
-  if (!res.ok) throw new Error(`Could not load STF template (${res.status}) — check the file exists at deal-documents/templates/STF_template.docx and the bucket policy allows reads`);
+
+  if (!res || !res.ok) {
+    const status = res ? res.status : 'unknown';
+    throw new Error(`Could not load STF template (${status}) — ensure STF_template.docx is uploaded to deal-documents/templates/ in Supabase Storage`);
+  }
 
   const arrayBuffer = await res.arrayBuffer();
   const zip = await JSZip.loadAsync(arrayBuffer);
