@@ -3587,14 +3587,20 @@ async function generateSTF(d) {
   }
 
   // Fetch template from Supabase Storage
-  const templateUrl = `${config.supabaseUrl}/storage/v1/object/deal-documents/templates/STF_template.docx`;
-  const res = await fetch(templateUrl, {
-    headers: {
-      'apikey': config.supabaseKey,
-      'Authorization': `Bearer ${config.supabaseKey}`
-    }
-  });
-  if (!res.ok) throw new Error('Could not load STF template from Supabase Storage — check the file exists at deal-documents/templates/STF_template.docx');
+  // Try authenticated fetch first, fall back to public URL
+  const templateUrl = `${config.supabaseUrl}/storage/v1/object/public/deal-documents/templates/STF_template.docx`;
+  let res = await fetch(templateUrl);
+  if (!res.ok) {
+    // Fall back to authenticated endpoint
+    const authUrl = `${config.supabaseUrl}/storage/v1/object/deal-documents/templates/STF_template.docx`;
+    res = await fetch(authUrl, {
+      headers: {
+        'apikey': config.supabaseKey,
+        'Authorization': `Bearer ${config.supabaseKey}`
+      }
+    });
+  }
+  if (!res.ok) throw new Error(`Could not load STF template (${res.status}) — check the file exists at deal-documents/templates/STF_template.docx and the bucket policy allows reads`);
 
   const arrayBuffer = await res.arrayBuffer();
   const zip = await JSZip.loadAsync(arrayBuffer);
