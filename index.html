@@ -2663,12 +2663,20 @@ async function toggleChecklistItem(id, completed) {
 
 async function updateDealProgress() {
   const items = await loadChecklist(currentDeal.id);
-  const total = items.length;
-  const done = items.filter(i => i.completed).length;
-  const progress = total > 0 ? Math.round((done / total) * 100) : 0;
-  await saveDeal({ ...currentDeal, progress });
-  currentDeal.progress = progress;
+  const role = currentDeal.client_role || 'Buyer';
+  const transactionType = currentDeal.transaction_type || '';
+  const { pct } = getWorkflowState(items, role, transactionType);
+  await saveDeal({ ...currentDeal, progress: pct });
+  currentDeal.progress = pct;
 }
+
+
+
+
+
+
+
+
 
 async function loadChecklistTemplate(role) {
   const isAPA = currentDeal && currentDeal.transaction_type === 'Asset Purchase';
@@ -2712,8 +2720,8 @@ function getBuyerChecklist() {
     { milestone: 'Trade mark and IP searches (if applicable)', category: 'Company Searches / Pre-DD', responsible: 'Solicitor', completed: false },
     { milestone: 'Search results reviewed and reported to client', category: 'Company Searches / Pre-DD', responsible: 'Solicitor', completed: false },
     // DUE DILIGENCE
-    { milestone: 'Legal due diligence questionnaire (LDDQ) sent to Seller solicitors', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
-    { milestone: 'Data room / VDR access obtained', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'LDDQ sent to Seller solicitors', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
+    { milestone: 'Data room (VDR) access obtained', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
     { milestone: 'DD documents received and indexed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
     { milestone: 'Corporate / constitutional documents reviewed (articles, statutory books, share register)', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
     { milestone: 'Material contracts reviewed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
@@ -2735,11 +2743,9 @@ function getBuyerChecklist() {
     { milestone: 'Follow-up DD questions raised with Seller', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
     { milestone: 'Follow-up DD responses received and reviewed', category: 'Due Diligence', responsible: 'Solicitor', completed: false },
     // SPA NEGOTIATION
-    { milestone: 'SPA drafted V1', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
-    { milestone: 'SPA sent to client for approval', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
-    { milestone: 'SPA sent to Seller', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
+    { milestone: 'First draft SPA prepared and sent to Seller solicitors', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
+    { milestone: 'SPA — client report and advice given (key risks, warranty position, price mechanics)', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
     { milestone: 'SPA — negotiations conducted (all rounds)', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
-    { milestone: 'Service agreements / consultancy agreements negotiated (if applicable)', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
     { milestone: 'Service agreements / consultancy agreements negotiated (if applicable)', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
     { milestone: 'SPA negotiations completed', category: 'SPA Negotiation', responsible: 'Solicitor', completed: false },
     // DISCLOSURE LETTER
@@ -2755,6 +2761,7 @@ function getBuyerChecklist() {
     { milestone: 'Client confirmed approval of final SPA and DL', category: 'Disclosure Letter', responsible: 'Client', completed: false },
     // ANCILLARIES
     { milestone: 'Target board resolution drafted', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
+    { milestone: 'Target board resolution approved by client', category: 'Ancillaries', responsible: 'Client', completed: false },
     { milestone: 'Target board resolution sent to Seller', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
     { milestone: 'Buyer board resolution drafted (if required)', category: 'Ancillaries', responsible: 'Solicitor', completed: false },
     { milestone: 'Buyer board resolution approved by client', category: 'Ancillaries', responsible: 'Client', completed: false },
@@ -2783,6 +2790,9 @@ function getBuyerChecklist() {
     { milestone: 'Signed buyer board resolution received', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
     { milestone: 'Signed PSC acceptance received', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
     { milestone: 'Signed director consent to act received', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
+    { milestone: 'Signed stock transfer form received from Seller', category: 'Pre-Completion & Execution', responsible: 'Solicitor', completed: false },
+    { milestone: 'Resignation letter(s) approved by client', category: 'Pre-Completion & Execution', responsible: 'Client', completed: false },
+    { milestone: 'Consent to act approved by client', category: 'Pre-Completion & Execution', responsible: 'Client', completed: false },
     { milestone: 'Completion funds received into client account from Buyer', category: 'Pre-Completion & Execution', responsible: 'Client', completed: false },
     { milestone: 'Firm fees and disbursements received', category: 'Pre-Completion & Execution', responsible: 'Client', completed: false },
     { milestone: 'Stamp Duty fees received', category: 'Pre-Completion & Execution', responsible: 'Client', completed: false },
