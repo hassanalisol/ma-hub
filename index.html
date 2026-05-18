@@ -3378,7 +3378,7 @@ async function renderDocChecklist(deal) {
   <div class="section-header">
     <div>
       <div class="section-title" style="font-size:16px">Transaction Document Checklist</div>
-      <div style="font-size:12px;color:var(--text3);margin-top:4px">${completedDocs} of ${totalDocs} documents signed or completed · ${pct}%</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:4px" data-doc-progress-label>${completedDocs} of ${totalDocs} documents signed or completed · ${pct}%</div>
     </div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-secondary btn-sm" onclick="openAddTransactionDoc()">+ Add Document</button>
@@ -3388,7 +3388,7 @@ async function renderDocChecklist(deal) {
 
   <div style="margin-bottom:1.5rem">
     <div style="height:4px;background:var(--bg4);border-radius:2px;overflow:hidden">
-      <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#2C5282,#4A7BB8);border-radius:2px;transition:width .4s ease"></div>
+      <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#2C5282,#4A7BB8);border-radius:2px;transition:width .4s ease" data-doc-progress-bar></div>
     </div>
   </div>
 
@@ -3437,6 +3437,7 @@ async function renderDocChecklist(deal) {
                       const isActive = s.value === (doc.status || 'not_started');
                       const isPast = activeStatuses.findIndex(x => x.value === (doc.status||'not_started')) > i;
                       return `<span onclick="updateTransactionDocStatus('${doc.id}','${s.value}')" title="${s.label}"
+                        data-doc-status-pill="${s.value}"
                         style="cursor:pointer;font-size:10px;padding:2px 7px;border-radius:4px;border:1px solid;white-space:nowrap;transition:all .15s;
                         ${isActive ? `background:${s.bg};color:${s.color};border-color:${s.border};font-weight:600;` :
                           isPast ? `background:var(--bg3);color:var(--text3);border-color:var(--border);text-decoration:line-through;opacity:0.5;` :
@@ -3444,6 +3445,7 @@ async function renderDocChecklist(deal) {
                       >${s.label}</span>`;
                     }).join('')}
                     <span onclick="updateTransactionDocStatus('${doc.id}','na')" title="N/A"
+                      data-doc-status-pill="na"
                       style="cursor:pointer;font-size:10px;padding:2px 7px;border-radius:4px;border:1px solid;white-space:nowrap;transition:all .15s;
                       ${'na' === (doc.status||'not_started') ? 'background:var(--bg4);color:var(--text3);border-color:var(--border);font-weight:600;' : 'background:transparent;color:var(--text3);border-color:var(--border);opacity:0.5;'}"
                     >N/A</span>
@@ -3468,12 +3470,52 @@ async function renderDocChecklist(deal) {
 async function updateTransactionDocStatus(id, status) {
   try {
     await saveTransactionDoc({ id, status });
-    // If moving to 'sent_for_sigs' — prompt to auto-create signature entries
+    // Update just the status pills in that row, no full re-render
+    const row = document.getElementById(`tdoc-row-${id}`);
+    if (row) {
+      const activeStatuses = DOC_STATUSES.filter(s => s.value !== 'na');
+      const allStatuses = DOC_STATUSES;
+      const pills = row.querySelectorAll('[data-doc-status-pill]');
+      pills.forEach(pill => {
+        const pVal = pill.getAttribute('data-doc-status-pill');
+        const sMeta = getDocStatusMeta(pVal);
+        const isActive = pVal === status;
+        const isPast = pVal !== 'na'
+          ? activeStatuses.findIndex(x => x.value === status) > activeStatuses.findIndex(x => x.value === pVal)
+          : false;
+        pill.style.cssText = `cursor:pointer;font-size:10px;padding:2px 7px;border-radius:4px;border:1px solid;white-space:nowrap;transition:all .15s;` +
+          (isActive
+            ? `background:${sMeta.bg};color:${sMeta.color};border-color:${sMeta.border};font-weight:600;`
+            : isPast
+              ? `background:var(--bg3);color:var(--text3);border-color:var(--border);text-decoration:line-through;opacity:0.5;`
+              : `background:transparent;color:var(--text3);border-color:var(--border);opacity:0.6;`);
+      });
+      // Update progress bar counters without full re-render
+      updateDocProgressBar();
+    }
     if (status === 'sent_for_sigs') {
       await maybeCreateSignaturesForDoc(id);
     }
-    await renderDocChecklist(currentDeal);
   } catch(e) { showNotif('Failed to update: ' + e.message, 'error'); }
+}
+
+function updateDocProgressBar() {
+  // Recalculate from current DOM pill states without re-rendering
+  const allRows = document.querySelectorAll('[id^="tdoc-row-"]');
+  let total = 0, done = 0;
+  allRows.forEach(row => {
+    const activePill = [...row.querySelectorAll('[data-doc-status-pill]')].find(p => p.style.fontWeight === '600');
+    if (!activePill) return;
+    const v = activePill.getAttribute('data-doc-status-pill');
+    if (v === 'na') return;
+    total++;
+    if (v === 'completed' || v === 'signed') done++;
+  });
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const bar = document.querySelector('[data-doc-progress-bar]');
+  const label = document.querySelector('[data-doc-progress-label]');
+  if (bar) bar.style.width = pct + '%';
+  if (label) label.textContent = `${done} of ${total} documents signed or completed · ${pct}%`;
 }
 
 async function updateTransactionDoc(id, field, value) {
