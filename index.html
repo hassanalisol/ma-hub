@@ -1312,7 +1312,7 @@ async function switchDealTab(tab, el) {
       <div class="card">
         <div style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:1rem">Key Contacts</div>
         <div style="margin-bottom:1rem">
-          <div style="font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Buyer Solicitor</div>
+          <div style="font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">${d.buyer_sol_label || (d.client_role === 'Seller' ? 'Buyer Solicitor' : d.client_role === 'Buyer' ? 'Seller Solicitor' : 'Counterparty Solicitor')}</div>
           ${fieldRow('Name', d.buyer_sol_name)}
           ${fieldRow('Email', d.buyer_sol_email ? `<a href="mailto:${d.buyer_sol_email}" style="color:var(--accent)">${d.buyer_sol_email}</a>` : null)}
           ${fieldRow('Phone', d.buyer_sol_phone)}
@@ -2011,7 +2011,14 @@ async function runSPAExtraction() {
   "companySecretaryChanges": "details if any",
   "pscChanges": "details of PSC changes",
   "serviceAgreements": ["parties to service agreements"],
-  "settlementAgreements": ["parties to settlement agreements"]
+  "settlementAgreements": ["parties to settlement agreements"],
+  "signatories": [
+    {
+      "name": "full name of signatory",
+      "document": "document they are signing e.g. SPA, Disclosure Letter, Stock Transfer Form, Board Resolution (Target), Board Resolution (Buyer), Board Resolution (Seller), Director Resignation Letter, Consent to Act",
+      "party": "their role e.g. Seller, Buyer, Target Director, Incoming Director, Outgoing Director, Witness"
+    }
+  ]
 }
 
 CRITICAL — Directors:
@@ -2078,6 +2085,33 @@ ${textContent.substring(0, 15000)}`;
     currentDeal = { ...currentDeal, ...spaUpdates };
 
     await logActivity(currentDeal.id, `SPA uploaded and analysed. ${generatedDocs.length} board resolution(s) generated.`);
+
+    // Auto-populate Signatures tab from extracted signatories
+    if (parsed.signatories && parsed.signatories.length) {
+      log(`Auto-populating ${parsed.signatories.length} signator(ies)…`);
+      // Check existing signatures to avoid duplicates
+      const existingSigs = await loadSignatures(currentDeal.id);
+      const existingKeys = new Set(existingSigs.map(s => `${s.signatory_name}|${s.document_name}`));
+      let added = 0;
+      for (const sig of parsed.signatories) {
+        if (!sig.name) continue;
+        const key = `${sig.name}|${sig.document || ''}`;
+        if (!existingKeys.has(key)) {
+          await sbFetch('signatures', { method: 'POST', body: JSON.stringify({
+            deal_id: currentDeal.id,
+            signatory_name: sig.name,
+            document_name: sig.document || 'SPA',
+            party: sig.party || '',
+            signed: false
+          })});
+          added++;
+        }
+      }
+      if (added > 0) {
+        log(`✓ ${added} signator(ies) added to Signatures tab`);
+        showNotif(`${added} signator(ies) auto-added to Signatures tab`, 'success');
+      }
+    }
 
     statusArea.innerHTML = `
     <div class="ai-status" style="margin-top:1rem;border-color:var(--green-border)">
@@ -3309,7 +3343,17 @@ function openEditDeal(d) {
       <div class="form-group"><label class="form-label">Next Action</label><input class="form-input" id="f-action" value="${d.next_action||''}"></div>
     </div>
     <div class="form-group"><label class="form-label">VDR / Data Room Link</label><input class="form-input" id="f-vdr" type="url" placeholder="https://datasite.com/..." value="${d.vdr_link||''}"></div>
-    <div style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin:1rem 0 0.5rem">Buyer Solicitor</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:1rem 0 0.5rem">
+      <div style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em">Counterparty Solicitor</div>
+      <select class="form-select" id="f-bsol-label" style="width:auto;font-size:12px;padding:3px 8px">
+        <option value="" ${!d.buyer_sol_label?'selected':''}>Auto (from role)</option>
+        <option value="Buyer Solicitor" ${d.buyer_sol_label==='Buyer Solicitor'?'selected':''}>Buyer Solicitor</option>
+        <option value="Seller Solicitor" ${d.buyer_sol_label==='Seller Solicitor'?'selected':''}>Seller Solicitor</option>
+        <option value="Counterparty Solicitor" ${d.buyer_sol_label==='Counterparty Solicitor'?'selected':''}>Counterparty Solicitor</option>
+        <option value="Opposing Counsel" ${d.buyer_sol_label==='Opposing Counsel'?'selected':''}>Opposing Counsel</option>
+        <option value="Target Solicitor" ${d.buyer_sol_label==='Target Solicitor'?'selected':''}>Target Solicitor</option>
+      </select>
+    </div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="f-bsol-name" value="${d.buyer_sol_name||''}" placeholder="Solicitor name"></div>
       <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="f-bsol-email" type="email" value="${d.buyer_sol_email||''}" placeholder="solicitor@firm.com"></div>
@@ -3350,6 +3394,7 @@ async function submitEditDeal() {
     buyer_sol_name: document.getElementById('f-bsol-name').value || null,
     buyer_sol_email: document.getElementById('f-bsol-email').value || null,
     buyer_sol_phone: document.getElementById('f-bsol-phone').value || null,
+    buyer_sol_label: document.getElementById('f-bsol-label').value || null,
     client_email: document.getElementById('f-client-email').value || null,
     client_phone: document.getElementById('f-client-phone').value || null,
     notes: document.getElementById('f-notes').value,
