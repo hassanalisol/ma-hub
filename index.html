@@ -1253,8 +1253,8 @@ function renderDealDetail(deal) {
     <button class="btn btn-secondary btn-sm" onclick="openEditDeal(currentDeal)">Edit Deal</button>
     <button class="btn btn-danger btn-sm" onclick="archiveDeal('${d.id}')">Archive</button>`;
 
-  window._dealTabs = ['Overview','Parties','Checklist','Documents','Signatures','AI','CriticalDates','Correspondence','Activity'];
-  window._dealTabLabels = {'Overview':'Overview','Parties':'Parties','Checklist':'Checklist','Documents':'Documents','Signatures':'Signatures','AI':'AI & Documents','CriticalDates':'Critical Dates','Correspondence':'Correspondence','Activity':'Activity'};
+  window._dealTabs = ['Overview','Parties','Checklist','DocChecklist','Documents','Signatures','AI','CriticalDates','Correspondence','Activity'];
+  window._dealTabLabels = {'Overview':'Overview','Parties':'Parties','Checklist':'Checklist','DocChecklist':'Transaction Documents','Documents':'Document Register','Signatures':'Signatures','AI':'AI & Documents','CriticalDates':'Critical Dates','Correspondence':'Correspondence','Activity':'Activity'};
   document.getElementById('content').innerHTML = `
   <div class="deal-detail-header">
     <div class="deal-detail-name">${d.deal_name}</div>
@@ -1458,6 +1458,10 @@ async function switchDealTab(tab, el) {
     </div>`;
   }
 
+
+  else if (tab === 'DocChecklist') {
+    await renderDocChecklist(d);
+  }
   else if (tab === 'AI') {
     renderAITab();
   }
@@ -3175,6 +3179,433 @@ function getAPASellerChecklist() {
     { milestone: 'Completion bible prepared and sent to client', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
     { milestone: 'File closed', category: 'Post-Completion', responsible: 'Solicitor', completed: false },
   ];
+}
+
+
+// ═══════════════════════════════════════════════════════
+// TRANSACTION DOCUMENT CHECKLIST
+// ═══════════════════════════════════════════════════════
+
+const DOC_STATUSES = [
+  { value: 'not_started',       label: 'Not Started',         color: 'var(--text3)',    bg: 'var(--bg3)',         border: 'var(--border)' },
+  { value: 'drafted',           label: 'Drafted',             color: 'var(--blue)',     bg: 'var(--blue-bg)',     border: 'var(--blue-border)' },
+  { value: 'sent_to_client',    label: 'Sent to Client',      color: 'var(--amber)',    bg: 'var(--amber-bg)',    border: 'var(--amber-border)' },
+  { value: 'sent_to_other',     label: 'Sent to Other Side',  color: 'var(--purple)',   bg: 'var(--purple-bg)',   border: 'var(--purple-border)' },
+  { value: 'agreed',            label: 'Agreed',              color: 'var(--blue)',     bg: 'var(--blue-bg)',     border: 'var(--blue-border)' },
+  { value: 'sent_for_sigs',     label: 'Sent for Signatures', color: 'var(--amber)',    bg: 'var(--amber-bg)',    border: 'var(--amber-border)' },
+  { value: 'signed',            label: 'Signed',              color: 'var(--green)',    bg: 'var(--green-bg)',    border: 'var(--green-border)' },
+  { value: 'completed',         label: 'Completed',           color: 'var(--green)',    bg: 'var(--green-bg)',    border: 'var(--green-border)' },
+  { value: 'na',                label: 'N/A',                 color: 'var(--text3)',    bg: 'var(--bg4)',         border: 'var(--border)' },
+];
+
+function getDocStatusMeta(value) {
+  return DOC_STATUSES.find(s => s.value === value) || DOC_STATUSES[0];
+}
+
+// Default document list — prepared_by and signed_by flip based on client_role
+function getDefaultTransactionDocs(clientRole, transactionType) {
+  const isBuyer = clientRole !== 'Seller';
+  const isAPA   = transactionType === 'Asset Purchase';
+
+  const docs = [
+    {
+      name: 'Heads of Terms',
+      section: 'Pre-Transaction',
+      prepared_by: 'Other Side',
+      signed_by: 'Both Parties',
+      notes: '',
+    },
+    {
+      name: 'Confidentiality Agreement',
+      section: 'Pre-Transaction',
+      prepared_by: isBuyer ? 'Us' : 'Other Side',
+      signed_by: 'Both Parties',
+      notes: '',
+    },
+    {
+      name: 'Exclusivity Agreement',
+      section: 'Pre-Transaction',
+      prepared_by: isBuyer ? 'Us' : 'Other Side',
+      signed_by: 'Both Parties',
+      notes: '',
+    },
+    {
+      name: isAPA ? 'Asset Purchase Agreement' : 'Share Purchase Agreement',
+      section: 'Main Transaction Documents',
+      prepared_by: isBuyer ? 'Us' : 'Other Side',
+      signed_by: 'Both Parties',
+      notes: '',
+    },
+    {
+      name: 'Disclosure Letter',
+      section: 'Main Transaction Documents',
+      prepared_by: isBuyer ? 'Other Side' : 'Us',
+      signed_by: 'Seller',
+      notes: '',
+    },
+    {
+      name: 'Target Board Resolution',
+      section: 'Ancillaries',
+      prepared_by: isBuyer ? 'Us' : 'Us',
+      signed_by: 'Target Director(s)',
+      notes: '',
+    },
+    {
+      name: 'Buyer Board Resolution',
+      section: 'Ancillaries',
+      prepared_by: isBuyer ? 'Us' : 'Other Side',
+      signed_by: 'Buyer Director(s)',
+      notes: '',
+    },
+    {
+      name: 'Seller Board Resolution',
+      section: 'Ancillaries',
+      prepared_by: isBuyer ? 'Other Side' : 'Us',
+      signed_by: 'Seller Director(s)',
+      notes: isBuyer ? 'Only if Seller is a company' : '',
+    },
+    {
+      name: 'Stock Transfer Form(s)',
+      section: 'Ancillaries',
+      prepared_by: isBuyer ? 'Us' : 'Other Side',
+      signed_by: 'Seller',
+      notes: 'J30 form',
+    },
+    {
+      name: 'Share Indemnity Letter',
+      section: 'Ancillaries',
+      prepared_by: isBuyer ? 'Us' : 'Other Side',
+      signed_by: 'Buyer',
+      notes: 'Only if share certificates lost',
+    },
+    {
+      name: 'PSC Cessation Letter (Outgoing)',
+      section: 'Ancillaries',
+      prepared_by: isBuyer ? 'Us' : 'Other Side',
+      signed_by: 'Outgoing PSC',
+      notes: '',
+    },
+    {
+      name: 'PSC Notification (Incoming)',
+      section: 'Ancillaries',
+      prepared_by: isBuyer ? 'Us' : 'Other Side',
+      signed_by: 'Incoming PSC',
+      notes: '',
+    },
+    {
+      name: 'Director Resignation Letter',
+      section: 'Ancillaries',
+      prepared_by: isBuyer ? 'Us' : 'Other Side',
+      signed_by: 'Outgoing Director',
+      notes: '',
+    },
+    {
+      name: 'Director Consent to Act',
+      section: 'Ancillaries',
+      prepared_by: isBuyer ? 'Us' : 'Other Side',
+      signed_by: 'Incoming Director',
+      notes: '',
+    },
+  ];
+
+  // APA extras
+  if (isAPA) {
+    docs.push(
+      { name: 'Bill of Sale / Asset Schedule', section: 'Main Transaction Documents', prepared_by: isBuyer ? 'Us' : 'Other Side', signed_by: 'Both Parties', notes: '' },
+      { name: 'TUPE Employee Liability Information', section: 'Ancillaries', prepared_by: 'Other Side', signed_by: 'N/A', notes: 'Seller obligation' },
+      { name: 'Novation Agreements', section: 'Ancillaries', prepared_by: isBuyer ? 'Us' : 'Other Side', signed_by: 'Both Parties + Third Party', notes: 'Per contract being novated' },
+      { name: 'IP Assignment Deed', section: 'Ancillaries', prepared_by: isBuyer ? 'Us' : 'Other Side', signed_by: 'Both Parties', notes: 'If IP being transferred' }
+    );
+  }
+
+  return docs.map((d, i) => ({ ...d, status: 'not_started', order_index: i }));
+}
+
+async function loadTransactionDocs(dealId) {
+  try {
+    return await sbFetch(`transaction_docs?deal_id=eq.${dealId}&order=order_index.asc`) || [];
+  } catch(e) { return []; }
+}
+
+async function saveTransactionDoc(doc) {
+  if (doc.id) {
+    const { id, ...rest } = doc;
+    return sbFetch(`transaction_docs?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify(rest) });
+  }
+  return sbFetch('transaction_docs', { method: 'POST', body: JSON.stringify(doc) });
+}
+
+async function deleteTransactionDoc(id) {
+  return sbFetch(`transaction_docs?id=eq.${id}`, { method: 'DELETE' });
+}
+
+async function renderDocChecklist(deal) {
+  const c = document.getElementById('deal-tab-content');
+  c.innerHTML = `<div style="text-align:center;padding:3rem"><div class="spinner"></div></div>`;
+
+  let docs = await loadTransactionDocs(deal.id);
+
+  // First visit — seed defaults
+  if (!docs.length) {
+    const defaults = getDefaultTransactionDocs(deal.client_role, deal.transaction_type);
+    for (let i = 0; i < defaults.length; i++) {
+      await saveTransactionDoc({ ...defaults[i], deal_id: deal.id });
+    }
+    docs = await loadTransactionDocs(deal.id);
+  }
+
+  const sections = {};
+  docs.forEach(d => {
+    const s = d.section || 'Other';
+    if (!sections[s]) sections[s] = [];
+    sections[s].push(d);
+  });
+
+  const sectionOrder = ['Pre-Transaction', 'Main Transaction Documents', 'Ancillaries', 'Other'];
+  const orderedSections = [
+    ...sectionOrder.filter(s => sections[s]),
+    ...Object.keys(sections).filter(s => !sectionOrder.includes(s))
+  ];
+
+  const preparedByOptions = ['Us', 'Other Side', 'Client', 'Joint', 'N/A'];
+  const signedByOptions = ['Both Parties', 'Seller', 'Buyer', 'Target Director(s)', 'Buyer Director(s)', 'Seller Director(s)', 'Outgoing Director', 'Incoming Director', 'Outgoing PSC', 'Incoming PSC', 'Both Parties + Third Party', 'N/A'];
+
+  const totalDocs = docs.filter(d => d.status !== 'na').length;
+  const completedDocs = docs.filter(d => d.status === 'completed' || d.status === 'signed').length;
+  const pct = totalDocs > 0 ? Math.round((completedDocs / totalDocs) * 100) : 0;
+
+  c.innerHTML = `
+  <div class="section-header">
+    <div>
+      <div class="section-title" style="font-size:16px">Transaction Document Checklist</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:4px">${completedDocs} of ${totalDocs} documents signed or completed · ${pct}%</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary btn-sm" onclick="openAddTransactionDoc()">+ Add Document</button>
+      <button class="btn btn-secondary btn-sm" onclick="resetTransactionDocs()">↺ Reset to Defaults</button>
+    </div>
+  </div>
+
+  <div style="margin-bottom:1.5rem">
+    <div style="height:4px;background:var(--bg4);border-radius:2px;overflow:hidden">
+      <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#2C5282,#4A7BB8);border-radius:2px;transition:width .4s ease"></div>
+    </div>
+  </div>
+
+  ${orderedSections.map(sectionName => {
+    const sectionDocs = sections[sectionName];
+    const sDone = sectionDocs.filter(d => d.status === 'completed' || d.status === 'signed').length;
+    return `
+    <div style="margin-bottom:2rem">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;padding-bottom:8px;margin-bottom:0;border-bottom:2px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <span>${sectionName}</span>
+        <span style="font-weight:400">${sDone}/${sectionDocs.length}</span>
+      </div>
+      <div class="table-wrap" style="border-top:none;border-radius:0 0 var(--radius-lg) var(--radius-lg)">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:22%">Document</th>
+              <th style="width:13%">Prepared By</th>
+              <th style="width:16%">Signed By</th>
+              <th style="width:30%">Status</th>
+              <th style="width:14%">Notes</th>
+              <th style="width:5%"></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sectionDocs.map(doc => {
+              const statusMeta = getDocStatusMeta(doc.status || 'not_started');
+              const statusIdx = DOC_STATUSES.findIndex(s => s.value === (doc.status || 'not_started'));
+              const activeStatuses = DOC_STATUSES.filter(s => s.value !== 'na');
+              return `
+              <tr id="tdoc-row-${doc.id}">
+                <td style="color:var(--text);font-weight:500;font-size:13px">${doc.name}</td>
+                <td>
+                  <select class="form-select" style="font-size:12px;padding:4px 6px" onchange="updateTransactionDoc('${doc.id}','prepared_by',this.value)">
+                    ${preparedByOptions.map(o => `<option${doc.prepared_by===o?' selected':''}>${o}</option>`).join('')}
+                  </select>
+                </td>
+                <td>
+                  <select class="form-select" style="font-size:12px;padding:4px 6px" onchange="updateTransactionDoc('${doc.id}','signed_by',this.value)">
+                    ${signedByOptions.map(o => `<option${doc.signed_by===o?' selected':''}>${o}</option>`).join('')}
+                  </select>
+                </td>
+                <td>
+                  <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center">
+                    ${activeStatuses.map((s, i) => {
+                      const isActive = s.value === (doc.status || 'not_started');
+                      const isPast = activeStatuses.findIndex(x => x.value === (doc.status||'not_started')) > i;
+                      return `<span onclick="updateTransactionDocStatus('${doc.id}','${s.value}')" title="${s.label}"
+                        style="cursor:pointer;font-size:10px;padding:2px 7px;border-radius:4px;border:1px solid;white-space:nowrap;transition:all .15s;
+                        ${isActive ? `background:${s.bg};color:${s.color};border-color:${s.border};font-weight:600;` :
+                          isPast ? `background:var(--bg3);color:var(--text3);border-color:var(--border);text-decoration:line-through;opacity:0.5;` :
+                          `background:transparent;color:var(--text3);border-color:var(--border);opacity:0.6;`}"
+                      >${s.label}</span>`;
+                    }).join('')}
+                    <span onclick="updateTransactionDocStatus('${doc.id}','na')" title="N/A"
+                      style="cursor:pointer;font-size:10px;padding:2px 7px;border-radius:4px;border:1px solid;white-space:nowrap;transition:all .15s;
+                      ${'na' === (doc.status||'not_started') ? 'background:var(--bg4);color:var(--text3);border-color:var(--border);font-weight:600;' : 'background:transparent;color:var(--text3);border-color:var(--border);opacity:0.5;'}"
+                    >N/A</span>
+                  </div>
+                </td>
+                <td>
+                  <input class="form-input" style="font-size:12px;padding:4px 8px" value="${(doc.notes||'').replace(/"/g,'&quot;')}" placeholder="Notes…"
+                    onblur="updateTransactionDoc('${doc.id}','notes',this.value)">
+                </td>
+                <td>
+                  <button class="btn btn-ghost btn-sm" style="color:var(--text3)" onclick="deleteTransactionDocRow('${doc.id}')">✕</button>
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('')}`;
+}
+
+async function updateTransactionDocStatus(id, status) {
+  try {
+    await saveTransactionDoc({ id, status });
+    // If moving to 'sent_for_sigs' — prompt to auto-create signature entries
+    if (status === 'sent_for_sigs') {
+      await maybeCreateSignaturesForDoc(id);
+    }
+    await renderDocChecklist(currentDeal);
+  } catch(e) { showNotif('Failed to update: ' + e.message, 'error'); }
+}
+
+async function updateTransactionDoc(id, field, value) {
+  try {
+    await saveTransactionDoc({ id, [field]: value });
+  } catch(e) { showNotif('Failed to update: ' + e.message, 'error'); }
+}
+
+async function maybeCreateSignaturesForDoc(docId) {
+  // Load the doc to get its name and signed_by
+  let docs;
+  try { docs = await loadTransactionDocs(currentDeal.id); } catch(e) { return; }
+  const doc = docs.find(d => d.id === docId);
+  if (!doc) return;
+
+  // Check if signatories already exist for this document
+  const existingSigs = await loadSignatures(currentDeal.id);
+  const alreadyHas = existingSigs.some(s => s.document_name === doc.name);
+  if (alreadyHas) return;
+
+  // Try to infer signatories from SPA extraction data or signed_by field
+  const spaData = window._spaData;
+  const signatoriesToAdd = [];
+
+  const signedBy = doc.signed_by || '';
+
+  if (spaData) {
+    if (signedBy.includes('Seller') && spaData.sellers) {
+      spaData.sellers.forEach(s => { if (s.name) signatoriesToAdd.push({ name: s.name, party: 'Seller' }); });
+    }
+    if (signedBy.includes('Buyer') && spaData.buyerName) {
+      signatoriesToAdd.push({ name: spaData.buyerName, party: 'Buyer' });
+    }
+    if (signedBy.includes('Outgoing Director') && spaData.outgoingDirector) {
+      signatoriesToAdd.push({ name: spaData.outgoingDirector, party: 'Outgoing Director' });
+    }
+    if (signedBy.includes('Incoming Director') && spaData.incomingDirector) {
+      signatoriesToAdd.push({ name: spaData.incomingDirector, party: 'Incoming Director' });
+    }
+    if (signedBy.includes('Outgoing PSC') && spaData.outgoingDirector) {
+      signatoriesToAdd.push({ name: spaData.outgoingDirector, party: 'Outgoing PSC' });
+    }
+    if (signedBy.includes('Incoming PSC') && spaData.incomingDirector) {
+      signatoriesToAdd.push({ name: spaData.incomingDirector, party: 'Incoming PSC' });
+    }
+  }
+
+  if (signatoriesToAdd.length > 0) {
+    for (const sig of signatoriesToAdd) {
+      await sbFetch('signatures', { method: 'POST', body: JSON.stringify({
+        deal_id: currentDeal.id,
+        signatory_name: sig.name,
+        document_name: doc.name,
+        party: sig.party,
+        signed: false
+      })});
+    }
+    showNotif(`${signatoriesToAdd.length} signator(ies) added to Signatures tab for ${doc.name}`, 'success');
+  }
+}
+
+async function deleteTransactionDocRow(id) {
+  if (!confirm('Remove this document from the checklist?')) return;
+  try {
+    await deleteTransactionDoc(id);
+    await renderDocChecklist(currentDeal);
+  } catch(e) { showNotif('Error: ' + e.message, 'error'); }
+}
+
+async function resetTransactionDocs() {
+  if (!confirm('Reset to defaults? This will remove any custom documents and reset all statuses.')) return;
+  try {
+    const existing = await loadTransactionDocs(currentDeal.id);
+    for (const doc of existing) { await deleteTransactionDoc(doc.id); }
+    await renderDocChecklist(currentDeal);
+    showNotif('Document checklist reset to defaults', 'success');
+  } catch(e) { showNotif('Error: ' + e.message, 'error'); }
+}
+
+function openAddTransactionDoc() {
+  const sections = ['Pre-Transaction', 'Main Transaction Documents', 'Ancillaries', 'Other'];
+  const preparedByOptions = ['Us', 'Other Side', 'Client', 'Joint', 'N/A'];
+  const signedByOptions = ['Both Parties', 'Seller', 'Buyer', 'Target Director(s)', 'Buyer Director(s)', 'Seller Director(s)', 'Outgoing Director', 'Incoming Director', 'Outgoing PSC', 'Incoming PSC', 'Both Parties + Third Party', 'N/A'];
+  openModal(`
+  <div class="modal-header"><div class="modal-title">Add Document</div><button class="close-btn" onclick="closeModal()">✕</button></div>
+  <div class="modal-body">
+    <div class="form-group"><label class="form-label">Document Name *</label><input class="form-input" id="tdoc-name" placeholder="e.g. Service Agreement"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Section</label>
+        <select class="form-select" id="tdoc-section">
+          ${sections.map(s => `<option>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Prepared By</label>
+        <select class="form-select" id="tdoc-prepared">
+          ${preparedByOptions.map(o => `<option>${o}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Signed By</label>
+        <select class="form-select" id="tdoc-signed">
+          ${signedByOptions.map(o => `<option>${o}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Notes</label><input class="form-input" id="tdoc-notes" placeholder="Optional notes"></div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-primary" onclick="submitAddTransactionDoc()">Add Document</button>
+  </div>`);
+}
+
+async function submitAddTransactionDoc() {
+  const name = document.getElementById('tdoc-name').value.trim();
+  if (!name) { showNotif('Document name required', 'error'); return; }
+  try {
+    await saveTransactionDoc({
+      deal_id: currentDeal.id,
+      name,
+      section: document.getElementById('tdoc-section').value,
+      prepared_by: document.getElementById('tdoc-prepared').value,
+      signed_by: document.getElementById('tdoc-signed').value,
+      notes: document.getElementById('tdoc-notes').value,
+      status: 'not_started',
+      order_index: 999
+    });
+    closeModal();
+    await renderDocChecklist(currentDeal);
+    showNotif('Document added', 'success');
+  } catch(e) { showNotif('Error: ' + e.message, 'error'); }
 }
 
 // ═══════════════════════════════════════════════════════
